@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MAE · McGill Architecture Exhibition · 2026</title>
+  <meta name="description" content="The 2026 McGill Architecture Exhibition. Final showcase of graduating M2 students at the Peter Guo-hua Fu School of Architecture. May 1st, 2026 at 815 Sherbrooke W." />
+
+  <meta property="og:title" content="MAE · McGill Architecture Exhibition · 2026" />
+  <meta property="og:description" content="May 1st, 2026 · 815 Sherbrooke W. Final exhibition by graduating M2 students." />
+  <meta property="og:type" content="website" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23000'/%3E%3C/svg%3E" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============ Header (every page) ============ -->
+  <header class="header">
+    <a class="header-mae nav-link" href="#home" data-target="home">MAE</a>
+    <nav class="header-nav" aria-label="Sections">
+      <a href="#exhibition"  class="nav-link" data-target="exhibition">Exhibition</a>
+      <a href="#information" class="nav-link" data-target="information">Information</a>
+    </nav>
+  </header>
+
+  <!-- Cursor-following dot (desktop only) -->
+  <div class="circle-cursor" aria-hidden="true"></div>
+
+  <main>
+
+    <!-- ============ HOME ============ -->
+    <section id="home" class="section active section--home">
+      <div class="home-stack">
+        <h1 class="hero hero--home">MAE</h1>
+        <p class="hero-sub">McGill Architecture Exhibition</p>
+      </div>
+
+      <div class="home-paras">
+        <p class="home-para">
+          This brochure celebrates the culmination of student work carried out in the final year (two-terms) of the Master of Architecture professional degree. Each student proposes a self-directed project, framing clear architectural issues and suggesting appropriate means of analysis, design, and representation. Together the students explore, describe, represent, mediate, and politicize a range of issues, sites, and ideas. Most of all, their projects show a deep concern for the consequences of architectural engagement, expanding the possibilities for positive change.
+        </p>
+        <p class="home-para home-para--muted">
+          Macdonald-Harrington Building, 815 Sherbrooke W. McGill Metro. No tickets needed.
+        </p>
+      </div>
+
+      <!-- Sponsors. Replace the placeholders with <img src="assets/…" alt="…"> tags
+           when the sponsor logos are ready. -->
+      <div class="sponsors">
+        <p class="sponsors__text">
+          With our sincere thanks to the partners and sponsors who made this exhibition possible.
+        </p>
+        <div class="sponsors__logos" aria-label="Sponsor logos (placeholders)">
+          <div class="sponsor-slot">Sponsor 1</div>
+          <div class="sponsor-slot">Sponsor 2</div>
+          <div class="sponsor-slot">Sponsor 3</div>
+          <div class="sponsor-slot">Sponsor 4</div>
+          <div class="sponsor-slot">Sponsor 5</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ EXHIBITION ============ -->
+    <section id="exhibition" class="section">
+      <h1 class="hero">Exhibition</h1>
+
+      <div class="group">
+        <h2 class="group__label">M2 — First floor</h2>
+        <div class="rooms-stack" data-rooms-mount></div>
+      </div>
+
+      <div class="group">
+        <h2 class="group__label">U3 — Second floor</h2>
+        <p class="group__pending">Details coming soon.</p>
+      </div>
+
+      <!-- Auto-populated by JS: shows any M2 student not yet assigned to a room -->
+      <div class="group group--unassigned" data-unassigned-mount></div>
+    </section>
+
+    <!-- ============ INFORMATION ============ -->
+    <section id="information" class="section">
+      <h1 class="hero">Information</h1>
+
+      <div class="info-grid">
+        <div class="info-text">
+          <p class="info-lead">
+            Join us for the final student exhibition showcasing the work of graduating M2 students. Experience a culmination of projects, ideas, and explorations developed over the past year.
+          </p>
+          <p class="info-meta">
+            Macdonald-Harrington Building, 815 Sherbrooke W. McGill Metro. No tickets needed.
+          </p>
+        </div>
+
+        <img
+          class="info-map"
+          src="assets/access-plan.png"
+          alt="Access plan showing the route from the McGill campus gate to the Macdonald-Harrington Building" />
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ Footer (every page) ============ -->
+  <footer class="foot">
+    <span class="foot-addr">815 Sherbrooke W</span>
+    <span class="foot-date">May 1st, 2026 @ 6pm</span>
+    <a class="foot-social" href="https://www.instagram.com/mcgill.mae" target="_blank" rel="noopener noreferrer">Instagram</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
