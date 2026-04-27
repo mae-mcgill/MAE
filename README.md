@@ -1,22 +1,22 @@
 # MAE 2026
 
 Static site for the **McGill Architecture Exhibition 2026**.
-Target domain: **mae-mcgill.ca**
-
-## Stack
-
-Plain HTML / CSS / JS. No build step. No dependencies.
+Live at: **https://mae-mcgill.github.io/MAE/** · target domain: **mae-mcgill.ca**
 
 ## Files
 
 ```
-index.html               — single page, all sections
+index.html               — the page (all sections in one HTML file)
 styles.css               — typography (Helvetica Neue) + layout
-script.js                — section switching, room renderer, cursor dot
+script.js                — section switching, room renderer, projects renderer
 README.md                — this file
-assets/access-plan.png   — venue map shown on the Information page
-assets/                  — drop sponsor logos and key-plan images here
-CNAME                    — (add later) custom domain, one line: mae-mcgill.ca
+
+assets/
+  access-plan.png        — venue map shown on the Information page
+  sponsors/              — sponsor logo PNGs (already populated)
+  plans/                 — drop key-plan images here
+  faces/                 — drop student portrait drawings here
+  projects/              — drop project hero images here
 ```
 
 ## Local preview
@@ -28,9 +28,9 @@ python3 -m http.server 8000
 
 ## Deploy on GitHub Pages
 
-1. Push these files to `main` on `oslal-mcgill/MAE`.
+1. Push to `main` on `mae-mcgill/MAE`.
 2. **Settings → Pages → Source:** `Deploy from a branch` · branch `main` · folder `/ (root)`.
-3. Live at `https://oslal-mcgill.github.io/MAE/` in ~1 minute.
+3. Live at `https://mae-mcgill.github.io/MAE/` in ~1 minute.
 
 ## Custom domain · mae-mcgill.ca
 
@@ -39,55 +39,114 @@ python3 -m http.server 8000
    mae-mcgill.ca
    ```
 2. DNS at your registrar:
-   - **Apex** `mae-mcgill.ca` — four `A` records: `185.199.108.153`, `.109.153`, `.110.153`, `.111.153`
-   - **www** `www.mae-mcgill.ca` — `CNAME` → `oslal-mcgill.github.io`
+   - **Apex** `mae-mcgill.ca` — four `A` records: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+   - **www** `www.mae-mcgill.ca` — `CNAME` → `mae-mcgill.github.io`
 3. **Settings → Pages**, enter the domain, then tick **Enforce HTTPS** once provisioned.
 
-## Editing content
+---
 
-### Add or remove students
-`script.js`, `STUDENTS` array. The site re-renders automatically.
+## How student/project URLs work
 
-### Assign students to rooms (Exhibition page)
-`script.js`, `ROOMS` array. Each room looks like:
+Every M2 student gets their own URL automatically:
+
+```
+https://mae-mcgill.ca/#project/oscar-lallier
+https://mae-mcgill.ca/#project/tea-canton
+https://mae-mcgill.ca/#project/albane-queinnec-barreau
+```
+
+The slug (`oscar-lallier`) is generated automatically from the name — accents and capitals are normalized. To find a slug, take the student's name, lowercase it, strip accents, and replace spaces with hyphens.
+
+These links are shareable. You can hand a student their direct URL.
+
+---
+
+## Where do I upload things?
+
+### Sponsor logos → `assets/sponsors/`
+Already wired up (9 logos). To add more or swap, drop the PNG in this folder and add an `<img class="sponsor-logo" …>` line to the `.sponsors__logos` block in `index.html`.
+
+### Key plans → `assets/plans/`
+Save plans as `assets/plans/101.png`, `102.png`, `114.png`, `312.png`. In `script.js`, set the `plan` field on the matching room:
 ```js
-{ id: "101", name: "Room 101", plan: null, students: [] }
+{ id: "101", name: "Room 101", floor: "m2", plan: "assets/plans/101.png", students: [...] }
 ```
-Drop names into a room's `students` array. Order in the array becomes the on-page numbered order. As soon as a name is in a room, it's removed from the bottom "unassigned" list automatically — no double-edit.
 
-### Add a key plan to a room
-Drop the image in `assets/plans/`, e.g. `assets/plans/101.png`, and point to it:
+### Student portraits → `assets/faces/`
+Save each portrait as `assets/faces/<slug>.png` (e.g. `assets/faces/oscar-lallier.png`). In `script.js`, add the `face` field to that student:
 ```js
-{ id: "101", name: "Room 101", plan: "assets/plans/101.png", students: [...] }
+{ name: "Oscar Lallier", face: "assets/faces/oscar-lallier.png" }
 ```
-The placeholder card swaps out for the image.
+Until set, the projects grid shows the student's initials as a placeholder.
 
-### Add the U3 / second-floor section
-When U3 details are ready, edit the `<section id="exhibition">` block in `index.html` — the U3 group is currently a placeholder paragraph.
-
-### Sponsors (home page)
-`<div class="sponsors">` in `index.html`. Replace each `<div class="sponsor-slot">…</div>` placeholder with a real `<img>`:
-```html
-<img class="sponsor-slot" src="assets/sponsors/canada-council.png" alt="Canada Council for the Arts">
+### Project hero images → `assets/projects/`
+Save as `assets/projects/<slug>.jpg` (or `.png`). In `script.js`, add the `image` field:
+```js
+{ name: "Oscar Lallier", image: "assets/projects/oscar-lallier.jpg" }
 ```
-Drop logo files into `assets/sponsors/` (or wherever) — black/grayscale logos look best on a white background.
 
-If you have one composite sponsor poster image, you can replace the whole `.sponsors__logos` flex container with a single `<img>` instead.
+### Venue map (Information page)
+Already wired. Replace the file at `assets/access-plan.png` to swap.
 
-### Header / footer / address / date / Instagram
-All hard-coded in `index.html` — `<header class="header">` and `<footer class="foot">`. Plain text, change in place.
+---
 
-### Typography
-`styles.css`, top:
+## Where do I update info?
+
+Almost everything content-related lives in **two places**:
+
+### `script.js` — the data file
+
+#### **`STUDENTS`** (top of file)
+The master list of M2 students. Each entry is one object:
+```js
+{
+  name:    "Oscar Lallier",                       // required
+  title:   "The Project Title",                   // optional
+  advisor: "Advisor's Name",                      // optional
+  text:    "Project description… (~400 words).",  // optional, supports paragraph breaks via blank lines
+  face:    "assets/faces/oscar-lallier.png",      // optional
+  image:   "assets/projects/oscar-lallier.jpg",   // optional
+}
+```
+Add fields as info comes in. Anything missing shows a "coming soon" placeholder.
+
+For multi-paragraph project text, use a JS template literal with blank lines between paragraphs:
+```js
+text: `First paragraph here.
+
+Second paragraph here.
+
+Third paragraph here.`,
+```
+
+#### **`ROOMS`**
+Assigns students to rooms. Each room:
+```js
+{ id: "101", name: "Room 101", floor: "m2", plan: null, students: [] }
+```
+Drop names into `students` in the order you want them numbered on the page.
+`floor` is `"m2"` (first floor) or `"u3"` (third floor) — controls which Exhibition group it appears under.
+
+### `index.html` — everything else
+- **Header / footer** text (address, dates, Instagram URL).
+- **Home brochure paragraph** (`.home-paras`).
+- **Sponsors thank-you line + logo `<img>` tags** (`.sponsors`).
+- **Information page text + map** (`<section id="information">`).
+
+### `styles.css` — visual tuning
+Top of file:
 ```css
---track: -0.04em;   /* tracking applied to every element */
+--track:        -0.04em;   /* letter-spacing everywhere */
+--text:         #0a0a0a;
+--text-muted:   #b8b8b8;
 ```
-Tighter? Drop to `-0.05em` or `-0.06em`. Looser? `-0.025em`.
+For the giant MAE logo size, search `.hero--home` and adjust the `30vw` in the clamp.
 
-Helvetica Neue is enforced on `*`, with `font-weight: 400` and `font-style: normal` locked across headings, buttons, and form elements. No bold or italic should ever leak in.
+---
 
 ## Notes
 
-- **The cursor dot** sits above all UI (`z-index: 9999`) and trails the mouse with easing. It's hidden on touch devices.
-- **Section URLs** use hash routing (`#exhibition`, `#information`). Browser back/forward works.
-- **Room cards** are not links — clicking them does nothing on purpose. If you later want each to open a per-room page, change the `<article>` to an `<a href>` in `script.js`'s `renderRooms`.
+- Section URLs use hash routing. Browser back/forward works.
+- Subroutes for individual projects: `#project/<slug>`. The slug is auto-derived from the student's name.
+- The cursor dot trails the mouse with easing on desktop, hidden on touch devices.
+- Helvetica Neue is enforced on every element, weight 400 only, italic disabled.

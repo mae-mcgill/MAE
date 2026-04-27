@@ -1,161 +1,300 @@
 /* =========================================================
    MAE 2026 — interactions
-   - Section switching (home / exhibition / information)
-   - Renders room cards on the Exhibition page (key-plan slot
-     + numbered student list per room) plus an auto-generated
-     "unassigned" block for any M2 student not yet placed.
+   - Section switching (home / exhibition / projects / information)
+   - Sub-routing for individual project pages: #project/oscar-lallier
+   - Renders Exhibition rooms by floor (M2 first, U3 third)
+   - Renders the Projects grid + the per-student detail view
    - Cursor-following solid black dot (desktop only)
    ========================================================= */
 
 
-/* ---------------- Master M2 student list ----------------
-   Edit freely. Names are the source of truth.
-   --------------------------------------------------------- */
+/* =========================================================
+   STUDENT + PROJECT DATA
+   =========================================================
+   Each entry needs at minimum a `name`. Optional fields:
+
+     title     — the project title         (string)
+     advisor   — name of advisor           (string)
+     text      — project description       (string, ~400 words)
+     image     — path to project image     (string, e.g. "assets/projects/oscar-lallier.jpg")
+     face      — path to portrait drawing  (string, e.g. "assets/faces/oscar-lallier.png")
+
+   Until a `face` is provided, the projects grid shows initials in a placeholder.
+   Until `title`, `advisor`, `text`, `image` are set, the project page shows
+   "coming soon" placeholders for each.
+
+   The URL slug for each student is auto-generated from the name. Edit names
+   here and the slug in the URL updates automatically.
+   ========================================================= */
 
 const STUDENTS = [
-  "Albane Queinnec-Barreau",
-  "Albert Assy",
-  "Alyssa Pangilinan",
-  "Anastasia Cubasova",
-  "Antoine Kirouac",
-  "Audrey Boutot",
-  "Bethany Wakelin",
-  "Bianca Hacker",
-  "Bronwyn Bell",
-  "Dharshini Mahesh Babu",
-  "Eliza Mihali",
-  "Félix Bergeron",
-  "Gaël Haddad",
-  "Ishaan Anand",
-  "Jacob Haley",
-  "Jérémy Turbide",
-  "Jessica Villarasa",
-  "Karine Payette",
-  "Lucas Azar",
-  "Ludovic Amyot",
-  "Mallory Kerr",
-  "Maria Jose Nolasco Ordonez",
-  "Nicholas Santoianni",
-  "Nicolea Apostolidis",
-  "Oscar Lallier",
-  "Qiqi Liu",
-  "Sarah Delnour",
-  "Sean Wolanyk",
-  "Serena Valles",
-  "Suehayla Eljaji",
-  "Sunny Lan",
-  "Téa Canton",
-  "Victoria Fratipietro",
+  { name: "Albane Queinnec-Barreau" },
+  { name: "Albert Assy" },
+  { name: "Alyssa Pangilinan" },
+  { name: "Anastasia Cubasova" },
+  { name: "Antoine Kirouac" },
+  { name: "Audrey Boutot" },
+  { name: "Bethany Wakelin" },
+  { name: "Bianca Hacker" },
+  { name: "Bronwyn Bell" },
+  { name: "Dharshini Mahesh Babu" },
+  { name: "Eliza Mihali" },
+  { name: "Félix Bergeron" },
+  { name: "Gaël Haddad" },
+  { name: "Ishaan Anand" },
+  { name: "Jacob Haley" },
+  { name: "Jérémy Turbide" },
+  { name: "Jessica Villarasa" },
+  { name: "Karine Payette" },
+  { name: "Lucas Azar" },
+  { name: "Ludovic Amyot" },
+  { name: "Mallory Kerr" },
+  { name: "Maria Jose Nolasco Ordonez" },
+  { name: "Nicholas Santoianni" },
+  { name: "Nicolea Apostolidis" },
+  { name: "Oscar Lallier" },
+  { name: "Qiqi Liu" },
+  { name: "Sarah Delnour" },
+  { name: "Sean Wolanyk" },
+  { name: "Serena Valles" },
+  { name: "Suehayla Eljaji" },
+  { name: "Sunny Lan" },
+  { name: "Téa Canton" },
+  { name: "Victoria Fratipietro" },
 ];
 
 
-/* ---------------- Rooms + per-room assignments ----------------
-   Add names to a room's "students" array as assignments come in.
-   Names listed here are removed from the bottom "unassigned" list
-   automatically. The numbered list is rendered in array order, so
-   that order is the visitor-facing room order.
-
-   Each room can also point to a "plan" image once it exists, e.g.
-     plan: "assets/plans/101.png"
-   --------------------------------------------------------------- */
+/* =========================================================
+   ROOMS  ·  exhibition layout
+   ========================================================= */
 
 const ROOMS = [
-  { id: "101", name: "Room 101", plan: null, students: [] },
-  { id: "102", name: "Room 102", plan: null, students: [] },
-  { id: "103", name: "Room 103", plan: null, students: [] },
-  { id: "114", name: "Room 114", plan: null, students: [] },
+  // M2 — first floor
+  { id: "101", name: "Room 101", floor: "m2", plan: null, students: [] },
+  { id: "102", name: "Room 102", floor: "m2", plan: null, students: [] },
+  { id: "114", name: "Room 114", floor: "m2", plan: null, students: [] },
+
+  // U3 — third floor
+  { id: "312", name: "Room 312", floor: "u3", plan: null, students: [] },
 ];
 
 
-/* ---------------- Section switching ---------------- */
-
-const navLinks = document.querySelectorAll(".nav-link");
-const sections = document.querySelectorAll(".section");
-
-function showSection(id, push = true) {
-  if (!document.getElementById(id)) id = "home";
-
-  sections.forEach(s => s.classList.toggle("active", s.id === id));
-  navLinks.forEach(a => a.classList.toggle("is-active", a.dataset.target === id));
-
-  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
-
-  if (push) history.pushState({ id }, "", id === "home" ? "#" : "#" + id);
-}
-
-navLinks.forEach(a => {
-  a.addEventListener("click", e => {
-    e.preventDefault();
-    showSection(a.dataset.target);
-  });
-});
-
-window.addEventListener("popstate", () => {
-  const id = (location.hash || "#home").slice(1) || "home";
-  showSection(id, false);
-});
-
-const initial = (location.hash || "#home").slice(1) || "home";
-showSection(initial, false);
-
-
-/* ---------------- Render Exhibition ---------------- */
-
-const roomsMount      = document.querySelector("[data-rooms-mount]");
-const unassignedMount = document.querySelector("[data-unassigned-mount]");
+/* =========================================================
+   Helpers
+   ========================================================= */
 
 function escapeHTML(s) {
-  return s.replace(/[&<>"']/g, c => (
+  return String(s).replace(/[&<>"']/g, c => (
     { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
   ));
 }
 
-function renderRooms() {
-  roomsMount.innerHTML = ROOMS.map(room => {
-    const planHTML = room.plan
-      ? `<img class="room-card__plan" src="${escapeHTML(room.plan)}" alt="Key plan for ${escapeHTML(room.name)}">`
-      : `<div class="room-card__plan">Key plan — coming soon</div>`;
+function slugify(name) {
+  return name
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")  // strip accents
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-    const listHTML = room.students.length
-      ? `<ol class="room-card__list">${
-          room.students.map(s => `<li><span>${escapeHTML(s)}</span></li>`).join("")
-        }</ol>`
-      : `<p class="room-card__pending">Student assignments coming soon.</p>`;
+function initials(name) {
+  return name
+    .split(/\s+/)
+    .map(w => w[0] || "")
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+// Map slug → student object, built once on load
+const STUDENT_BY_SLUG = Object.fromEntries(
+  STUDENTS.map(s => [slugify(s.name), s])
+);
+
+
+/* =========================================================
+   Section switching + project sub-routing
+   ========================================================= */
+
+const navLinks = document.querySelectorAll(".nav-link");
+const sections = document.querySelectorAll(".section");
+
+const projectsListMount   = document.querySelector("[data-projects-list]");
+const projectDetailMount  = document.querySelector("[data-project-detail]");
+
+function setActiveSection(id) {
+  sections.forEach(s => s.classList.toggle("active", s.id === id));
+  navLinks.forEach(a => a.classList.toggle("is-active", a.dataset.target === id));
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+}
+
+function showProjectsList() {
+  setActiveSection("projects");
+  projectsListMount.hidden  = false;
+  projectDetailMount.hidden = true;
+  document.title = "Projects · MAE · McGill Architecture Exhibition · 2026";
+}
+
+function showProjectDetail(slug) {
+  const student = STUDENT_BY_SLUG[slug];
+  if (!student) {                 // unknown slug → fall back to list
+    location.hash = "#projects";
+    return;
+  }
+
+  setActiveSection("projects");
+  projectsListMount.hidden  = true;
+  projectDetailMount.hidden = false;
+  projectDetailMount.innerHTML = renderProjectDetail(student);
+  document.title = `${student.name} · MAE 2026`;
+}
+
+function route() {
+  const raw = (location.hash || "#home").slice(1) || "home";
+
+  // Sub-route for individual project: #project/oscar-lallier
+  if (raw.startsWith("project/")) {
+    const slug = raw.split("/")[1] || "";
+    showProjectDetail(slug);
+    return;
+  }
+
+  if (!document.getElementById(raw)) {
+    setActiveSection("home");
+    return;
+  }
+
+  // Plain top-level route — make sure the projects detail is reset
+  if (raw === "projects") {
+    showProjectsList();
+  } else {
+    setActiveSection(raw);
+  }
+
+  // Reset doc title to the section name
+  if (raw === "home")        document.title = "MAE · McGill Architecture Exhibition · 2026";
+  if (raw === "exhibition")  document.title = "Exhibition · MAE · McGill Architecture Exhibition · 2026";
+  if (raw === "information") document.title = "Information · MAE · McGill Architecture Exhibition · 2026";
+}
+
+// Intercept clicks on header nav links so we get the smooth swap
+navLinks.forEach(a => {
+  a.addEventListener("click", e => {
+    e.preventDefault();
+    const target = a.dataset.target;
+    location.hash = target === "home" ? "" : "#" + target;
+    if (target === "home") route();   // empty hash doesn't fire hashchange reliably
+  });
+});
+
+window.addEventListener("hashchange", route);
+route();   // initial load
+
+
+/* =========================================================
+   Render Exhibition rooms
+   ========================================================= */
+
+function renderRoomCard(room) {
+  const planHTML = room.plan
+    ? `<img class="room-card__plan" src="${escapeHTML(room.plan)}" alt="Key plan for ${escapeHTML(room.name)}">`
+    : `<div class="room-card__plan">Key plan — coming soon</div>`;
+
+  const listHTML = room.students.length
+    ? `<ol class="room-card__list">${
+        room.students.map(s => `<li><span>${escapeHTML(s)}</span></li>`).join("")
+      }</ol>`
+    : `<p class="room-card__pending">Names coming soon.</p>`;
+
+  return `
+    <article class="room-card" data-room="${escapeHTML(room.id)}">
+      <h3 class="room-card__title">${escapeHTML(room.name)}</h3>
+      ${planHTML}
+      ${listHTML}
+    </article>
+  `;
+}
+
+document.querySelectorAll("[data-rooms-mount]").forEach(mount => {
+  const floor = mount.dataset.floor;
+  const rooms = ROOMS.filter(r => r.floor === floor);
+  mount.innerHTML = rooms.map(renderRoomCard).join("");
+});
+
+
+/* =========================================================
+   Render Projects grid (the list view)
+   ========================================================= */
+
+const projectsGrid = document.querySelector("[data-projects-grid]");
+
+function renderProjectsGrid() {
+  const sorted = [...STUDENTS].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+  );
+
+  projectsGrid.innerHTML = sorted.map(s => {
+    const slug = slugify(s.name);
+    const face = s.face
+      ? `<img src="${escapeHTML(s.face)}" alt="Portrait of ${escapeHTML(s.name)}">`
+      : `<span class="project-card__face--placeholder">${escapeHTML(initials(s.name))}</span>`;
 
     return `
-      <article class="room-card" data-room="${escapeHTML(room.id)}">
-        <h3 class="room-card__title">${escapeHTML(room.name)}</h3>
-        ${planHTML}
-        ${listHTML}
-      </article>
+      <li>
+        <a class="project-card" href="#project/${slug}">
+          <div class="project-card__face">${face}</div>
+          <span class="project-card__name">${escapeHTML(s.name)}</span>
+        </a>
+      </li>
     `;
   }).join("");
 }
 
-function renderUnassigned() {
-  const assigned = new Set(ROOMS.flatMap(r => r.students));
-  const remaining = STUDENTS
-    .filter(s => !assigned.has(s))
-    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+renderProjectsGrid();
 
-  if (!remaining.length) {
-    unassignedMount.innerHTML = "";
-    return;
-  }
 
-  unassignedMount.innerHTML = `
-    <p class="unassigned__label">Graduating M2 students — room assignments coming soon.</p>
-    <ul class="unassigned__list">
-      ${remaining.map(s => `<li>${escapeHTML(s)}</li>`).join("")}
-    </ul>
+/* =========================================================
+   Render Project detail (single student page)
+   ========================================================= */
+
+function renderProjectDetail(s) {
+  const titleHTML = s.title
+    ? `<p class="project-detail__title">${escapeHTML(s.title)}</p>`
+    : `<p class="project-detail__title project-detail__pending">Project title — coming soon</p>`;
+
+  const imageHTML = s.image
+    ? `<img class="project-detail__image" src="${escapeHTML(s.image)}" alt="${escapeHTML(s.title || s.name)}">`
+    : `<div class="project-detail__image">Project image — coming soon</div>`;
+
+  const advisorHTML = s.advisor
+    ? `<p class="project-detail__advisor">Advisor — <strong>${escapeHTML(s.advisor)}</strong></p>`
+    : `<p class="project-detail__advisor">Advisor — coming soon</p>`;
+
+  const textHTML = s.text
+    ? `<div class="project-detail__text">${
+         escapeHTML(s.text).split(/\n\s*\n/).map(p => `<p>${p}</p>`).join("")
+       }</div>`
+    : `<p class="project-detail__pending">Project description — coming soon (≈400 words).</p>`;
+
+  return `
+    <a class="project-back" href="#projects">Back to projects</a>
+    <h1 class="project-detail__name">${escapeHTML(s.name)}</h1>
+    ${titleHTML}
+    <div class="project-detail__body">
+      ${imageHTML}
+      <div class="project-detail__meta">
+        ${advisorHTML}
+        ${textHTML}
+      </div>
+    </div>
   `;
 }
 
-renderRooms();
-renderUnassigned();
 
-
-/* ---------------- Cursor-following dot ---------------- */
+/* =========================================================
+   Cursor-following dot
+   ========================================================= */
 
 const circle = document.querySelector(".circle-cursor");
 let target = { x: 0, y: 0 };

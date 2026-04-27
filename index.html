@@ -4,10 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MAE · McGill Architecture Exhibition · 2026</title>
-  <meta name="description" content="The 2026 McGill Architecture Exhibition. Final showcase of graduating M2 students at the Peter Guo-hua Fu School of Architecture. May 1st, 2026 at 815 Sherbrooke W." />
+  <meta name="description" content="The 2026 McGill Architecture Exhibition. Final showcase of graduating M2 students at the Peter Guo-hua Fu School of Architecture. Vernissage May 1st, 2026 at 815 Sherbrooke W." />
 
   <meta property="og:title" content="MAE · McGill Architecture Exhibition · 2026" />
-  <meta property="og:description" content="May 1st, 2026 · 815 Sherbrooke W. Final exhibition by graduating M2 students." />
+  <meta property="og:description" content="Vernissage May 1st, 2026 · 815 Sherbrooke W. Exhibition until May 28th." />
   <meta property="og:type" content="website" />
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23000'/%3E%3C/svg%3E" />
@@ -21,6 +21,7 @@
     <a class="header-mae nav-link" href="#home" data-target="home">MAE</a>
     <nav class="header-nav" aria-label="Sections">
       <a href="#exhibition"  class="nav-link" data-target="exhibition">Exhibition</a>
+      <a href="#projects"    class="nav-link" data-target="projects">Projects</a>
       <a href="#information" class="nav-link" data-target="information">Information</a>
     </nav>
   </header>
@@ -39,25 +40,30 @@
 
       <div class="home-paras">
         <p class="home-para">
-          This brochure celebrates the culmination of student work carried out in the final year (two-terms) of the Master of Architecture professional degree. Each student proposes a self-directed project, framing clear architectural issues and suggesting appropriate means of analysis, design, and representation. Together the students explore, describe, represent, mediate, and politicize a range of issues, sites, and ideas. Most of all, their projects show a deep concern for the consequences of architectural engagement, expanding the possibilities for positive change.
+          This exhibition celebrates the culmination of student work carried out in the final year (two terms) of the Master of Architecture professional degree. Each student proposes a self-directed project, framing clear architectural issues and suggesting appropriate means of analysis, design, and representation. Together the students explore, describe, represent, mediate, and politicize a range of issues, sites, and ideas. Most of all, their projects show a deep concern for the consequences of architectural engagement, expanding the possibilities for positive change.
         </p>
         <p class="home-para home-para--muted">
           Macdonald-Harrington Building, 815 Sherbrooke W. McGill Metro. No tickets needed.
         </p>
       </div>
 
-      <!-- Sponsors. Replace the placeholders with <img src="assets/…" alt="…"> tags
-           when the sponsor logos are ready. -->
+      <!-- =====================================================
+           SPONSORS  ·  9 logos
+           ===================================================== -->
       <div class="sponsors">
         <p class="sponsors__text">
           With our sincere thanks to the partners and sponsors who made this exhibition possible.
         </p>
-        <div class="sponsors__logos" aria-label="Sponsor logos (placeholders)">
-          <div class="sponsor-slot">Sponsor 1</div>
-          <div class="sponsor-slot">Sponsor 2</div>
-          <div class="sponsor-slot">Sponsor 3</div>
-          <div class="sponsor-slot">Sponsor 4</div>
-          <div class="sponsor-slot">Sponsor 5</div>
+        <div class="sponsors__logos" aria-label="Sponsor logos">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_MCGILL.png"            alt="McGill University">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_ASA.png"               alt="ASA">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_GASA.png"              alt="GASA">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_CHEVALIER-MORALES.png" alt="Chevalier Morales">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_DIALOG.png"            alt="DIALOG">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_DMA.png"               alt="DMA">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_NEUF.png"              alt="NEUF Architect(e)s">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_NFOE.png"              alt="NFOE">
+          <img class="sponsor-logo" src="assets/sponsors/260424-MAE_SPONSORS-LOGOS_STENDEL_REICH.png"     alt="Stendel + Reich">
         </div>
       </div>
     </section>
@@ -68,16 +74,25 @@
 
       <div class="group">
         <h2 class="group__label">M2 — First floor</h2>
-        <div class="rooms-stack" data-rooms-mount></div>
+        <div class="rooms-stack" data-rooms-mount data-floor="m2"></div>
       </div>
 
       <div class="group">
-        <h2 class="group__label">U3 — Second floor</h2>
-        <p class="group__pending">Details coming soon.</p>
+        <h2 class="group__label">U3 — Third floor</h2>
+        <div class="rooms-stack" data-rooms-mount data-floor="u3"></div>
+      </div>
+    </section>
+
+    <!-- ============ PROJECTS ============ -->
+    <section id="projects" class="section">
+      <!-- list view -->
+      <div data-projects-list>
+        <h1 class="hero">Projects</h1>
+        <ul class="projects-grid" data-projects-grid></ul>
       </div>
 
-      <!-- Auto-populated by JS: shows any M2 student not yet assigned to a room -->
-      <div class="group group--unassigned" data-unassigned-mount></div>
+      <!-- detail view (rendered by JS for an individual student) -->
+      <div data-project-detail hidden></div>
     </section>
 
     <!-- ============ INFORMATION ============ -->
@@ -106,7 +121,7 @@
   <!-- ============ Footer (every page) ============ -->
   <footer class="foot">
     <span class="foot-addr">815 Sherbrooke W</span>
-    <span class="foot-date">May 1st, 2026 @ 6pm</span>
+    <span class="foot-date">Vernissage May 1st, 2026 @ 6pm — Exhibition until May 28th, 2026</span>
     <a class="foot-social" href="https://www.instagram.com/mcgill.mae" target="_blank" rel="noopener noreferrer">Instagram</a>
   </footer>
 
