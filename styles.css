@@ -18,7 +18,7 @@
   --hairline:     #ebebeb;
 
   --track:        -0.04em;
-  --track-loose:  -0.015em;   /* used for body copy that needs to breathe */
+  --track-loose:  -0.015em;
 
   --font:
     "PP Neue Montreal",
@@ -216,7 +216,7 @@ main {
 }
 
 /* =========================================================
-   Sponsors  ·  8 logos in one row
+   Sponsors  ·  8 logos
    ========================================================= */
 
 .sponsors {
@@ -257,13 +257,12 @@ main {
 }
 
 /* =========================================================
-   Exhibition  ·  4 rooms in one row, M2 (3 cols) + U3 (1 col)
+   Exhibition  ·  4 rooms in one row
    ========================================================= */
 
-/* Section labels (M2 / U3) — small, uppercase, sit above the rooms */
 .group__label {
   font-size: clamp(11px, 0.85vw, 14px);
-  color: var(--text);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: 0;
@@ -336,18 +335,15 @@ main {
   font-size: clamp(13px, 0.9vw, 15px);
   line-height: 1.5;
   color: var(--text);
-  counter-reset: stu;
 }
 
 .room-card__list li {
-  counter-increment: stu;
   padding: 1px 0;
   display: flex;
   gap: 8px;
 }
 
-.room-card__list li::before {
-  content: counter(stu) ".";
+.room-card__list__num {
   color: var(--text-muted);
   flex: 0 0 auto;
   min-width: 1.6em;
@@ -481,8 +477,9 @@ main {
 }
 .project-detail__title.project-detail__pending { color: var(--text-muted); }
 
+/* Larger face on the detail page */
 .project-detail__face {
-  width: clamp(110px, 13vw, 200px);
+  width: clamp(160px, 18vw, 280px);
   aspect-ratio: 1 / 1;
   position: relative;
 }
@@ -497,7 +494,7 @@ main {
 
 @media (max-width: 600px) {
   .project-detail__head { grid-template-columns: 1fr; }
-  .project-detail__face { width: clamp(80px, 22vw, 120px); justify-self: end; order: -1; }
+  .project-detail__face { width: clamp(110px, 30vw, 160px); justify-self: end; order: -1; }
 }
 
 .project-detail__body {
@@ -565,9 +562,6 @@ main {
 
 .project-detail__fact-value--pending { color: var(--text-muted); }
 
-/* Description body — looser tracking + line-height for readability.
-   Both the container and its descendants need it because the universal
-   selector `*` would otherwise reapply the global tracking on <p>. */
 .project-detail__text,
 .project-detail__text * {
   letter-spacing: var(--track-loose);

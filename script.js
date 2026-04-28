@@ -4,6 +4,7 @@
    - Sub-routing for individual project pages: #project/oscar-lallier
    - Auto-discovery of all assets
    - Room assignments fetched from assets/rooms.txt at boot
+   - Scroll restored to top on every navigation
    ========================================================= */
 
 
@@ -49,9 +50,7 @@ const STUDENTS = [
 
 
 /* =========================================================
-   ROOMS  ·  metadata only. Student lists are populated from
-   assets/rooms.txt at bootstrap (see loadRoomsTxt below).
-   The defaults here are a fallback if the file is missing.
+   ROOMS  ·  metadata. Student lists populated from rooms.txt.
    ========================================================= */
 
 const ROOMS = [
@@ -116,7 +115,7 @@ const STUDENT_SET = new Set(STUDENTS);
 
 
 /* =========================================================
-   Image auto-discovery — tries each extension, gives up cleanly
+   Image auto-discovery
    ========================================================= */
 
 function autoLoadImage(img, basePath, exts) {
@@ -134,17 +133,6 @@ function autoLoadImage(img, basePath, exts) {
 
 /* =========================================================
    rooms.txt parser
-   ---------------------------------------------------------
-   Format:
-     # comments allowed (line starting with #)
-     ROOM 101
-     Bethany Wakelin
-     Jessica Villarasa
-     ...
-     ROOM 102
-     Bianca Hacker
-     ...
-   Returns { "101": ["Bethany ...", ...], "102": [...] }
    ========================================================= */
 
 function parseRoomsTxt(raw) {
@@ -182,7 +170,6 @@ async function loadRoomsTxt() {
         continue;
       }
 
-      // Validate names against master list — warn on typos but don't drop them
       const unknown = names.filter(n => !STUDENT_SET.has(n));
       if (unknown.length) {
         console.warn(
@@ -251,10 +238,17 @@ const sections = document.querySelectorAll(".section");
 const projectsListMount  = document.querySelector("[data-projects-list]");
 const projectDetailMount = document.querySelector("[data-project-detail]");
 
+function scrollTop() {
+  // Always reset to top after a route change
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 function setActiveSection(id) {
   sections.forEach(s => s.classList.toggle("active", s.id === id));
   navLinks.forEach(a => a.classList.toggle("is-active", a.dataset.target === id));
-  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  scrollTop();
 }
 
 function showProjectsList() {
@@ -331,19 +325,24 @@ window.addEventListener("hashchange", route);
 
 
 /* =========================================================
-   Render Exhibition rooms (single 4-col grid)
+   Render Exhibition rooms — continuous numbering across rooms.
+   We pre-compute each student's global index and pass it via
+   a CSS custom property so the counter starts at the right
+   number for each room.
    ========================================================= */
 
-function renderRoomCard(room) {
+function renderRoomCard(room, startIndex) {
   const linkStudents = room.floor !== "u3";
 
   const listHTML = room.students.length
     ? `<ol class="room-card__list">${
-        room.students.map(s => {
+        room.students.map((s, i) => {
           const safe = escapeHTML(s);
-          return linkStudents
-            ? `<li><a href="#project/${slugify(s)}">${safe}</a></li>`
-            : `<li><span>${safe}</span></li>`;
+          const num  = startIndex + i;
+          const inner = linkStudents
+            ? `<a href="#project/${slugify(s)}">${safe}</a>`
+            : `<span>${safe}</span>`;
+          return `<li><span class="room-card__list__num">${num}.</span>${inner}</li>`;
         }).join("")
       }</ol>`
     : `<p class="room-card__pending">Names coming soon.</p>`;
@@ -364,17 +363,29 @@ function renderExhibition() {
   const mount = document.querySelector("[data-exhibition-mount]");
   if (!mount) return;
 
-  const m2 = ROOMS.filter(r => r.floor === "m2");
-  const u3 = ROOMS.filter(r => r.floor === "u3");
+  // Walk rooms in display order (M2 first, U3 last), accumulating count
+  const displayOrder = [
+    ...ROOMS.filter(r => r.floor === "m2"),
+    ...ROOMS.filter(r => r.floor === "u3"),
+  ];
+
+  let counter = 1;
+  const cards = displayOrder.map(room => {
+    const html = renderRoomCard(room, counter);
+    counter += room.students.length;
+    return { room, html };
+  });
+
+  const m2Cards = cards.filter(c => c.room.floor === "m2").map(c => c.html).join("");
+  const u3Cards = cards.filter(c => c.room.floor === "u3").map(c => c.html).join("");
 
   mount.innerHTML = `
     <h2 class="group__label exhibition-grid__floor--m2">M2, First floor</h2>
     <h2 class="group__label exhibition-grid__floor--u3">U3, Third floor</h2>
-    ${m2.map(renderRoomCard).join("")}
-    ${u3.map(renderRoomCard).join("")}
+    ${m2Cards}
+    ${u3Cards}
   `;
 
-  // Auto-load each plan image (tries .png, then .jpg, then .jpeg)
   mount.querySelectorAll("[data-plan]").forEach(img => {
     const id = img.dataset.plan;
     autoLoadImage(img, `${PATHS.plans.dir}/${id}`, PATHS.plans.exts);
@@ -515,11 +526,13 @@ async function hydrateProjectDetail(slug, name) {
    ========================================================= */
 
 async function bootstrap() {
-  await loadRoomsTxt();   // populates ROOMS[*].students from rooms.txt
+  // Disable browser scroll restoration so we control it
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
+  await loadRoomsTxt();
   renderExhibition();
   renderProjectsGrid();
-  route();                 // initial route — also handles direct project URLs
+  route();
 }
 
 bootstrap();
