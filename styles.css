@@ -320,6 +320,12 @@ main {
 }
 .room-card__plan-img.is-loaded { opacity: 1; }
 
+/* Hide the placeholder text once a plan loads (plans may be transparent PNGs) */
+.room-card__plan:has(.room-card__plan-img.is-loaded)
+  .room-card__plan-placeholder {
+  display: none;
+}
+
 .room-card__list {
   font-size: clamp(14px, 1.0vw, 17px);
   line-height: 1.5;
@@ -376,10 +382,15 @@ main {
 }
 .project-card:hover .project-card__face { transform: translateY(-2px); }
 
-/* When the image successfully loads, hide the box framing */
+/* When the image successfully loads, hide the box framing AND
+   the initials behind the drawing (faces have transparent backgrounds) */
 .project-card__face:has(.project-card__face-img.is-loaded) {
   border-color: transparent;
   background: transparent;
+}
+.project-card__face:has(.project-card__face-img.is-loaded)
+  .project-card__face-placeholder {
+  display: none;
 }
 
 .project-card__face-placeholder {
@@ -489,6 +500,10 @@ main {
 .project-detail__image:has(.project-detail__image-img.is-loaded) {
   border-color: transparent;
   background: transparent;
+}
+.project-detail__image:has(.project-detail__image-img.is-loaded)
+  .project-detail__image-placeholder {
+  display: none;
 }
 
 .project-detail__meta {
