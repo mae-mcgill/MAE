@@ -185,7 +185,6 @@ main {
   margin: 0;
 }
 
-/* Subtitle: narrower than the giant MAE wordmark */
 .hero-sub {
   text-align: center;
   font-size: clamp(16px, 4.2vw, 78px);
@@ -216,7 +215,7 @@ main {
 }
 
 /* =========================================================
-   Sponsors  ·  9 on one row at desktop
+   Sponsors
    ========================================================= */
 
 .sponsors {
@@ -227,15 +226,12 @@ main {
   padding-top: clamp(24px, 3vw, 40px);
 }
 
-/* No max-width — let the sentence flow on one line wherever possible */
 .sponsors__text {
   font-size: clamp(14px, 1.05vw, 18px);
   color: var(--text-muted);
   margin-bottom: clamp(20px, 2.4vw, 32px);
 }
 
-/* All 9 sponsors on one row. minmax(0, 1fr) lets columns
-   shrink below their content width so they always fit. */
 .sponsors__logos {
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
@@ -255,7 +251,6 @@ main {
 }
 .sponsor-logo:hover { filter: opacity(1); }
 
-/* On mobile, wrap into 3 columns of 3 */
 @media (max-width: 700px) {
   .sponsors__logos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -269,14 +264,25 @@ main {
 }
 .group:last-child { margin-bottom: 0; }
 
+/* Half size, black, no em dash (the comma is in the HTML) */
 .group__label {
   font-size: clamp(11px, 0.85vw, 14px);
   color: var(--text);
   margin-bottom: clamp(16px, 1.6vw, 24px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.group__pending {
+  font-size: clamp(13px, 0.95vw, 15px);
+  color: var(--text-muted);
 }
 
 /* =========================================================
    Exhibition — room cards
+   ---------------------------------------------------------
+   Always 3 columns on desktop so a single U3 card occupies
+   the same width as one of the three M2 cards above.
    ========================================================= */
 
 .rooms-stack {
@@ -300,6 +306,7 @@ main {
   color: var(--text);
 }
 
+/* No border / outline on plans — placeholder bg vanishes when image loads */
 .room-card__plan {
   position: relative;
   width: 100%;
@@ -307,10 +314,10 @@ main {
   background: #fafafa;
   overflow: hidden;
 }
-/* When a plan loads, drop the placeholder background too */
 .room-card__plan:has(.room-card__plan-img.is-loaded) {
   background: transparent;
 }
+
 .room-card__plan-placeholder {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -323,11 +330,9 @@ main {
   object-fit: contain;
   opacity: 0;
   transition: opacity 240ms ease;
-  background: #fff;
 }
 .room-card__plan-img.is-loaded { opacity: 1; }
 
-/* Hide the placeholder text once a plan loads (plans may be transparent PNGs) */
 .room-card__plan:has(.room-card__plan-img.is-loaded)
   .room-card__plan-placeholder {
   display: none;
@@ -354,7 +359,7 @@ main {
   min-width: 1.6em;
 }
 
-/* M2 student names are links; nudge right on hover */
+/* M2 student names are clickable — nudge right on hover */
 .room-card__list a {
   color: inherit;
   transition: padding-left 200ms ease, color 200ms ease;
@@ -386,8 +391,6 @@ main {
   cursor: pointer;
 }
 
-/* Square. Border + background only show while placeholder is visible —
-   when an image loads, the box becomes invisible (no outline). */
 .project-card__face {
   position: relative;
   width: 100%;
@@ -400,7 +403,7 @@ main {
 .project-card:hover .project-card__face { transform: translateY(-2px); }
 
 /* When the image successfully loads, hide the box framing AND
-   the initials behind the drawing (faces have transparent backgrounds) */
+   the initials behind the drawing (faces have transparent BGs) */
 .project-card__face:has(.project-card__face-img.is-loaded) {
   border-color: transparent;
   background: transparent;
@@ -457,10 +460,19 @@ main {
 .project-back:hover { color: var(--text); }
 .project-back::before { content: "←"; }
 
+/* Head row: name + title on the left, face portrait top-right */
 .project-detail__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: clamp(24px, 3vw, 56px);
+}
+
+.project-detail__head-text {
   display: flex;
   flex-direction: column;
   gap: clamp(24px, 3vw, 48px);
+  min-width: 0;
 }
 
 .project-detail__name {
@@ -470,7 +482,7 @@ main {
   margin: 0;
 }
 
-/* Project title is now solid black (was muted) */
+/* Project title now black */
 .project-detail__title {
   font-size: clamp(22px, 1.9vw, 34px);
   color: var(--text);
@@ -478,8 +490,27 @@ main {
   margin: 0;
   max-width: 800px;
 }
-/* Pending state stays muted to differentiate from real content */
 .project-detail__title.project-detail__pending { color: var(--text-muted); }
+
+/* Face portrait — only visible when the image loads */
+.project-detail__face {
+  width: clamp(110px, 13vw, 200px);
+  aspect-ratio: 1 / 1;
+  position: relative;
+}
+.project-detail__face-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+.project-detail__face-img.is-loaded { opacity: 1; }
+
+@media (max-width: 600px) {
+  .project-detail__head { grid-template-columns: 1fr; }
+  .project-detail__face { width: clamp(80px, 22vw, 120px); justify-self: end; order: -1; }
+}
 
 .project-detail__body {
   display: grid;
@@ -488,10 +519,7 @@ main {
   align-items: start;
 }
 
-/* Project hero image — natural aspect ratio, no cropping.
-   Placeholder reserves a 4:3 space until the image loads;
-   then the placeholder hides and the image shows at its
-   natural aspect ratio scaled to column width. */
+/* Project hero image — natural aspect ratio, no cropping */
 .project-detail__image {
   position: relative;
   width: 100%;
@@ -516,7 +544,6 @@ main {
 }
 .project-detail__image-img.is-loaded { opacity: 1; }
 
-/* Hide the placeholder once a real image is loaded */
 .project-detail__image:has(.project-detail__image-img.is-loaded)
   .project-detail__image-placeholder {
   display: none;
@@ -581,7 +608,7 @@ main {
   align-items: start;
 }
 
-.info-text { max-width: 520px; }
+.info-text { max-width: 560px; }
 
 .info-lead {
   font-size: clamp(20px, 1.7vw, 30px);
@@ -597,7 +624,40 @@ main {
   max-width: 480px;
 }
 
-/* Bigger access plan */
+/* Contact info — smaller, sits below the paragraphs */
+.info-contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(20px, 2vw, 32px) clamp(24px, 3vw, 48px);
+  margin-top: clamp(40px, 4vw, 72px);
+}
+
+.info-contact__group { line-height: 1.45; }
+
+.info-contact__label {
+  display: block;
+  font-size: clamp(10px, 0.75vw, 12px);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.info-contact__value,
+a.info-contact__value {
+  font-size: clamp(13px, 0.95vw, 15px);
+  color: var(--text);
+  display: block;
+  transition: opacity 220ms ease;
+}
+a.info-contact__value:hover { opacity: 0.55; }
+
+.info-contact__group--wide { grid-column: 1 / -1; }
+
+@media (max-width: 600px) {
+  .info-contact { grid-template-columns: 1fr; }
+}
+
 .info-map {
   width: 100%;
   max-width: 620px;

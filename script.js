@@ -2,21 +2,13 @@
    MAE 2026 — interactions
    - Section switching (home / exhibition / projects / information)
    - Sub-routing for individual project pages: #project/oscar-lallier
-   - Auto-discovery of all assets:
-       faces           → assets/faces/<slug>.png
-       project images  → assets/project-images/<slug>.jpg
-       key plans       → assets/plans/<roomid>.png
-       project text    → assets/project-texts/<slug>.txt
-     Files don't need to exist — placeholders show until they do.
+   - Auto-discovery of all assets (faces, plans, project images, project text)
+   - Linked student names under M2 room cards (U3 names not linked)
    ========================================================= */
 
 
 /* =========================================================
-   STUDENTS  ·  master M2 list
-   =========================================================
-   Just names. Everything else (face, image, title, advisor,
-   description) lives in matching files under assets/ — see
-   the README for filenames and the project-text format.
+   STUDENTS  ·  master M2 list (just names)
    ========================================================= */
 
 const STUDENTS = [
@@ -58,15 +50,67 @@ const STUDENTS = [
 
 /* =========================================================
    ROOMS  ·  exhibition layout
+   ---------------------------------------------------------
+   Listed alphabetically by first name within each room.
    ========================================================= */
 
 const ROOMS = [
-  // M2 — first floor
-  { id: "101", name: "Room 101", floor: "m2", students: [] },
-  { id: "102", name: "Room 102", floor: "m2", students: [] },
-  { id: "114", name: "Room 114", floor: "m2", students: [] },
+  {
+    id: "101",
+    name: "Room 101",
+    floor: "m2",
+    students: [
+      "Bethany Wakelin",
+      "Jessica Villarasa",
+      "Karine Payette",
+      "Mallory Kerr",
+      "Qiqi Liu",
+      "Sarah Delnour",
+      "Téa Canton",
+    ],
+  },
+  {
+    id: "102",
+    name: "Room 102",
+    floor: "m2",
+    students: [
+      "Bianca Hacker",
+      "Félix Bergeron",
+      "Gaël Haddad",
+      "Nicolea Apostolidis",
+      "Serena Valles",
+    ],
+  },
+  {
+    id: "114",
+    name: "Room 114",
+    floor: "m2",
+    students: [
+      "Albane Queinnec-Barreau",
+      "Albert Assy",
+      "Alyssa Pangilinan",
+      "Anastasia Cubasova",
+      "Antoine Kirouac",
+      "Audrey Boutot",
+      "Bronwyn Bell",
+      "Dharshini Mahesh Babu",
+      "Eliza Mihali",
+      "Ishaan Anand",
+      "Jacob Haley",
+      "Jérémy Turbide",
+      "Lucas Azar",
+      "Ludovic Amyot",
+      "Maria Jose Nolasco Ordonez",
+      "Nicholas Santoianni",
+      "Oscar Lallier",
+      "Sean Wolanyk",
+      "Suehayla Eljaji",
+      "Sunny Lan",
+      "Victoria Fratipietro",
+    ],
+  },
 
-  // U3 — third floor
+  // U3 — third floor (no names yet)
   { id: "312", name: "Room 312", floor: "u3", students: [] },
 ];
 
@@ -123,10 +167,6 @@ const STUDENT_BY_SLUG = Object.fromEntries(
 
 /* =========================================================
    Image auto-discovery
-   ---------------------------------------------------------
-   Sets img.src to the first extension; on error, tries the
-   next one. If ALL fail, removes the <img>, leaving the
-   placeholder underneath visible.
    ========================================================= */
 
 function autoLoadImage(img, basePath, exts) {
@@ -143,19 +183,7 @@ function autoLoadImage(img, basePath, exts) {
 
 
 /* =========================================================
-   Project text-file fetching + parsing
-   ---------------------------------------------------------
-   Format of assets/project-texts/<slug>.txt:
-
-     TITLE: My Project Title
-     ADVISOR: Jane Doe
-
-     The body of the description starts after the first blank
-     line. Multiple paragraphs separated by blank lines.
-
-     Like so.
-
-   All fields optional. Missing keys → "coming soon".
+   Project text-file parsing
    ========================================================= */
 
 const projectTextCache = {};
@@ -177,7 +205,6 @@ async function fetchProjectText(slug) {
 }
 
 function parseProjectText(raw) {
-  // Split header from body at first blank line
   const lines = raw.replace(/\r\n/g, "\n").split("\n");
   let split = lines.findIndex(l => l.trim() === "");
   if (split < 0) split = lines.length;
@@ -191,18 +218,16 @@ function parseProjectText(raw) {
     if (m) meta[m[1].toLowerCase()] = m[2].trim();
   }
 
-  const body = bodyLines.join("\n").trim();
-
   return {
     title:   meta.title   || null,
     advisor: meta.advisor || null,
-    text:    body || null,
+    text:    bodyLines.join("\n").trim() || null,
   };
 }
 
 
 /* =========================================================
-   Section switching + project sub-routing
+   Section switching + sub-routing
    ========================================================= */
 
 const navLinks = document.querySelectorAll(".nav-link");
@@ -235,10 +260,7 @@ function showProjectDetail(slug) {
   projectsListMount.style.display  = "none";
   projectDetailMount.style.display = "";
 
-  // 1. Render skeleton immediately with placeholders
   projectDetailMount.innerHTML = renderProjectDetailSkeleton(name);
-
-  // 2. Kick off async loads — image + text file
   hydrateProjectDetail(slug, name);
 
   document.title = `${name} · MAE 2026`;
@@ -270,7 +292,6 @@ function route() {
   if (raw === "information") document.title = "Information · MAE · McGill Architecture Exhibition · 2026";
 }
 
-// One delegated click handler for ALL hash links — header and dynamic
 document.addEventListener("click", e => {
   const link = e.target.closest('a[href^="#"]');
   if (!link) return;
@@ -298,12 +319,22 @@ route();   // initial load
 
 /* =========================================================
    Render Exhibition rooms
+   ---------------------------------------------------------
+   M2 rooms: student names link to their project page.
+   U3:       no links (no project pages exist for U3).
    ========================================================= */
 
 function renderRoomCard(room) {
+  const linkStudents = room.floor !== "u3";
+
   const listHTML = room.students.length
     ? `<ol class="room-card__list">${
-        room.students.map(s => `<li><span>${escapeHTML(s)}</span></li>`).join("")
+        room.students.map(s => {
+          const safe = escapeHTML(s);
+          return linkStudents
+            ? `<li><a href="#project/${slugify(s)}">${safe}</a></li>`
+            : `<li><span>${safe}</span></li>`;
+        }).join("")
       }</ol>`
     : `<p class="room-card__pending">Names coming soon.</p>`;
 
@@ -325,7 +356,6 @@ document.querySelectorAll("[data-rooms-mount]").forEach(mount => {
   mount.innerHTML = rooms.map(renderRoomCard).join("");
 });
 
-// After rooms are rendered, autoload each plan image
 document.querySelectorAll("[data-plan]").forEach(img => {
   const id = img.dataset.plan;
   autoLoadImage(img, `${PATHS.plans.dir}/${id}`, PATHS.plans.exts);
@@ -358,8 +388,6 @@ function renderProjectsGrid() {
     `;
   }).join("");
 
-  // Autoload faces — tries .png, .jpg, .jpeg, .webp; if all fail, the
-  // <img> removes itself and the placeholder behind it shows.
   projectsGrid.querySelectorAll("[data-face]").forEach(img => {
     const slug = img.dataset.face;
     autoLoadImage(img, `${PATHS.faces.dir}/${slug}`, PATHS.faces.exts);
@@ -393,8 +421,13 @@ function renderProjectDetailSkeleton(name) {
       <a class="project-back" href="#projects">Back to projects</a>
 
       <div class="project-detail__head">
-        <h1 class="project-detail__name">${escapeHTML(name)}</h1>
-        <p class="project-detail__title project-detail__pending" data-slot="title">Project title — coming soon</p>
+        <div class="project-detail__head-text">
+          <h1 class="project-detail__name">${escapeHTML(name)}</h1>
+          <p class="project-detail__title project-detail__pending" data-slot="title">Project title — coming soon</p>
+        </div>
+        <div class="project-detail__face">
+          <img class="project-detail__face-img" data-slot="face" alt="">
+        </div>
       </div>
 
       <div class="project-detail__body">
@@ -417,15 +450,18 @@ function renderProjectDetailSkeleton(name) {
 }
 
 async function hydrateProjectDetail(slug, name) {
-  // 1. Try to load the project hero image
+  // Face image — top right of the head
+  const faceImg = projectDetailMount.querySelector('[data-slot="face"]');
+  if (faceImg) autoLoadImage(faceImg, `${PATHS.faces.dir}/${slug}`, PATHS.faces.exts);
+
+  // Project hero image
   const img = projectDetailMount.querySelector('[data-slot="image"]');
   if (img) autoLoadImage(img, `${PATHS.projectImage.dir}/${slug}`, PATHS.projectImage.exts);
 
-  // 2. Fetch the .txt data file (parallel with image)
+  // Text data file
   const data = await fetchProjectText(slug);
-  if (!data) return;   // file missing — placeholders stay
+  if (!data) return;
 
-  // 3. Fill in title
   if (data.title) {
     const t = projectDetailMount.querySelector('[data-slot="title"]');
     if (t) {
@@ -434,7 +470,6 @@ async function hydrateProjectDetail(slug, name) {
     }
   }
 
-  // 4. Fill in advisor
   if (data.advisor) {
     const advisorBlock = projectDetailMount.querySelector('[data-fact="advisor"]');
     if (advisorBlock) {
@@ -445,7 +480,6 @@ async function hydrateProjectDetail(slug, name) {
     }
   }
 
-  // 5. Fill in body text — paragraphs are separated by blank lines
   if (data.text) {
     const textSlot = projectDetailMount.querySelector('[data-slot="text"]');
     if (textSlot) {
