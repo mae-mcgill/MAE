@@ -185,10 +185,11 @@ main {
   margin: 0;
 }
 
+/* Subtitle: narrower than the giant MAE wordmark */
 .hero-sub {
   text-align: center;
-  font-size: clamp(22px, 7vw, 130px);
-  line-height: 0.95;
+  font-size: clamp(16px, 4.2vw, 78px);
+  line-height: 1;
   color: var(--text);
   margin: 0;
 }
@@ -215,7 +216,7 @@ main {
 }
 
 /* =========================================================
-   Sponsors
+   Sponsors  ·  9 on one row at desktop
    ========================================================= */
 
 .sponsors {
@@ -226,23 +227,25 @@ main {
   padding-top: clamp(24px, 3vw, 40px);
 }
 
+/* No max-width — let the sentence flow on one line wherever possible */
 .sponsors__text {
   font-size: clamp(14px, 1.05vw, 18px);
   color: var(--text-muted);
-  max-width: 640px;
   margin-bottom: clamp(20px, 2.4vw, 32px);
 }
 
+/* All 9 sponsors on one row. minmax(0, 1fr) lets columns
+   shrink below their content width so they always fit. */
 .sponsors__logos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: clamp(12px, 1.5vw, 24px);
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: clamp(8px, 1.2vw, 20px);
   align-items: center;
 }
 
 .sponsor-logo {
   width: 100%;
-  height: 70px;
+  height: clamp(40px, 5vw, 70px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -251,6 +254,11 @@ main {
   transition: filter 220ms ease;
 }
 .sponsor-logo:hover { filter: opacity(1); }
+
+/* On mobile, wrap into 3 columns of 3 */
+@media (max-width: 700px) {
+  .sponsors__logos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 
 /* =========================================================
    Group  ·  used by Exhibition
@@ -288,7 +296,6 @@ main {
   color: var(--text);
 }
 
-/* Plan area uses the same image-over-placeholder pattern */
 .room-card__plan {
   position: relative;
   width: 100%;
@@ -356,7 +363,8 @@ main {
   cursor: pointer;
 }
 
-/* Face area: placeholder behind, image fades in over it */
+/* Square. Border + background only show while placeholder is visible —
+   when an image loads, the box becomes invisible (no outline). */
 .project-card__face {
   position: relative;
   width: 100%;
@@ -364,11 +372,14 @@ main {
   background: #fafafa;
   border: 1px solid var(--hairline);
   overflow: hidden;
-  transition: border-color 220ms ease, transform 220ms ease;
+  transition: border-color 220ms ease, background-color 220ms ease, transform 220ms ease;
 }
-.project-card:hover .project-card__face {
-  border-color: var(--text);
-  transform: translateY(-2px);
+.project-card:hover .project-card__face { transform: translateY(-2px); }
+
+/* When the image successfully loads, hide the box framing */
+.project-card__face:has(.project-card__face-img.is-loaded) {
+  border-color: transparent;
+  background: transparent;
 }
 
 .project-card__face-placeholder {
@@ -384,7 +395,6 @@ main {
   object-fit: cover;
   opacity: 0;
   transition: opacity 240ms ease;
-  background: #fff;
 }
 .project-card__face-img.is-loaded { opacity: 1; }
 
@@ -432,26 +442,29 @@ main {
   margin: 0;
 }
 
+/* Project title is now solid black (was muted) */
 .project-detail__title {
   font-size: clamp(22px, 1.9vw, 34px);
-  color: var(--text-muted);
+  color: var(--text);
   line-height: 1.2;
   margin: 0;
   max-width: 800px;
 }
+/* Pending state stays muted to differentiate from real content */
+.project-detail__title.project-detail__pending { color: var(--text-muted); }
 
 .project-detail__body {
   display: grid;
-  grid-template-columns: 5fr 4fr;
+  grid-template-columns: 1fr 1fr;
   gap: clamp(48px, 6vw, 110px);
   align-items: start;
 }
 
-/* Project hero image: same placeholder pattern */
+/* Square project hero image */
 .project-detail__image {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   border: 1px dashed var(--hairline);
   background: #fafafa;
   overflow: hidden;
@@ -471,6 +484,12 @@ main {
   background: #fff;
 }
 .project-detail__image-img.is-loaded { opacity: 1; }
+
+/* Hide the framing once a real image is loaded */
+.project-detail__image:has(.project-detail__image-img.is-loaded) {
+  border-color: transparent;
+  background: transparent;
+}
 
 .project-detail__meta {
   display: flex;
@@ -547,16 +566,17 @@ main {
   max-width: 480px;
 }
 
+/* Bigger access plan */
 .info-map {
   width: 100%;
-  max-width: 380px;
+  max-width: 620px;
   height: auto;
   justify-self: end;
 }
 
 @media (max-width: 760px) {
   .info-grid { grid-template-columns: 1fr; }
-  .info-map  { justify-self: start; max-width: 280px; margin-top: 24px; }
+  .info-map  { justify-self: start; max-width: 380px; margin-top: 24px; }
 }
 
 /* =========================================================
@@ -602,5 +622,5 @@ main {
 
   .hero       { font-size: 18vw; }
   .hero--home { font-size: 38vw; }
-  .hero-sub   { font-size: 8.5vw; }
+  .hero-sub   { font-size: 5.5vw; }
 }
