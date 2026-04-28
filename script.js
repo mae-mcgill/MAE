@@ -2,8 +2,8 @@
    MAE 2026 — interactions
    - Section switching (home / exhibition / projects / information)
    - Sub-routing for individual project pages: #project/oscar-lallier
-   - Auto-discovery of all assets (faces, plans, project images, project text)
-   - Linked student names under M2 room cards (U3 names not linked)
+   - Auto-discovery of all assets
+   - Room assignments fetched from assets/rooms.txt at boot
    ========================================================= */
 
 
@@ -49,74 +49,21 @@ const STUDENTS = [
 
 
 /* =========================================================
-   ROOMS  ·  exhibition layout
-   ---------------------------------------------------------
-   Listed alphabetically by first name within each room.
+   ROOMS  ·  metadata only. Student lists are populated from
+   assets/rooms.txt at bootstrap (see loadRoomsTxt below).
+   The defaults here are a fallback if the file is missing.
    ========================================================= */
 
 const ROOMS = [
-  {
-    id: "101",
-    name: "Room 101",
-    floor: "m2",
-    students: [
-      "Bethany Wakelin",
-      "Jessica Villarasa",
-      "Karine Payette",
-      "Mallory Kerr",
-      "Qiqi Liu",
-      "Sarah Delnour",
-      "Téa Canton",
-    ],
-  },
-  {
-    id: "102",
-    name: "Room 102",
-    floor: "m2",
-    students: [
-      "Bianca Hacker",
-      "Félix Bergeron",
-      "Gaël Haddad",
-      "Nicolea Apostolidis",
-      "Serena Valles",
-    ],
-  },
-  {
-    id: "114",
-    name: "Room 114",
-    floor: "m2",
-    students: [
-      "Albane Queinnec-Barreau",
-      "Albert Assy",
-      "Alyssa Pangilinan",
-      "Anastasia Cubasova",
-      "Antoine Kirouac",
-      "Audrey Boutot",
-      "Bronwyn Bell",
-      "Dharshini Mahesh Babu",
-      "Eliza Mihali",
-      "Ishaan Anand",
-      "Jacob Haley",
-      "Jérémy Turbide",
-      "Lucas Azar",
-      "Ludovic Amyot",
-      "Maria Jose Nolasco Ordonez",
-      "Nicholas Santoianni",
-      "Oscar Lallier",
-      "Sean Wolanyk",
-      "Suehayla Eljaji",
-      "Sunny Lan",
-      "Victoria Fratipietro",
-    ],
-  },
-
-  // U3 — third floor (no names yet)
+  { id: "101", name: "Room 101", floor: "m2", students: [] },
+  { id: "102", name: "Room 102", floor: "m2", students: [] },
+  { id: "114", name: "Room 114", floor: "m2", students: [] },
   { id: "312", name: "Room 312", floor: "u3", students: [] },
 ];
 
 
 /* =========================================================
-   Asset paths and accepted extensions
+   Asset paths
    ========================================================= */
 
 const PATHS = {
@@ -124,6 +71,7 @@ const PATHS = {
   projectImage: { dir: "assets/project-images", exts: ["jpg", "jpeg", "png", "webp"] },
   plans:        { dir: "assets/plans",          exts: ["png", "jpg", "jpeg"] },
   text:         { dir: "assets/project-texts",  ext:  "txt" },
+  rooms:        "assets/rooms.txt",
 };
 
 
@@ -164,9 +112,11 @@ const STUDENT_BY_SLUG = Object.fromEntries(
   STUDENTS.map(name => [slugify(name), name])
 );
 
+const STUDENT_SET = new Set(STUDENTS);
+
 
 /* =========================================================
-   Image auto-discovery
+   Image auto-discovery — tries each extension, gives up cleanly
    ========================================================= */
 
 function autoLoadImage(img, basePath, exts) {
@@ -183,7 +133,72 @@ function autoLoadImage(img, basePath, exts) {
 
 
 /* =========================================================
-   Project text-file parsing
+   rooms.txt parser
+   ---------------------------------------------------------
+   Format:
+     # comments allowed (line starting with #)
+     ROOM 101
+     Bethany Wakelin
+     Jessica Villarasa
+     ...
+     ROOM 102
+     Bianca Hacker
+     ...
+   Returns { "101": ["Bethany ...", ...], "102": [...] }
+   ========================================================= */
+
+function parseRoomsTxt(raw) {
+  const result = {};
+  let currentId = null;
+
+  for (const line of raw.replace(/\r\n/g, "\n").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.startsWith("#")) continue;
+
+    const m = trimmed.match(/^ROOM\s+(\S+)$/i);
+    if (m) {
+      currentId = m[1];
+      if (!result[currentId]) result[currentId] = [];
+      continue;
+    }
+
+    if (currentId) result[currentId].push(trimmed);
+  }
+  return result;
+}
+
+async function loadRoomsTxt() {
+  try {
+    const res = await fetch(PATHS.rooms, { cache: "no-cache" });
+    if (!res.ok) return;
+
+    const parsed = parseRoomsTxt(await res.text());
+
+    for (const [roomId, names] of Object.entries(parsed)) {
+      const room = ROOMS.find(r => r.id === roomId);
+      if (!room) {
+        console.warn(`rooms.txt references unknown room "${roomId}" — ignored.`);
+        continue;
+      }
+
+      // Validate names against master list — warn on typos but don't drop them
+      const unknown = names.filter(n => !STUDENT_SET.has(n));
+      if (unknown.length) {
+        console.warn(
+          `rooms.txt: names not in STUDENTS list (typo?): ${unknown.join(", ")}`
+        );
+      }
+      room.students = names;
+    }
+  } catch (e) {
+    console.warn("rooms.txt not loaded — using empty room lists.", e);
+  }
+}
+
+
+/* =========================================================
+   Project text parser (per-student .txt file)
    ========================================================= */
 
 const projectTextCache = {};
@@ -314,14 +329,9 @@ document.addEventListener("click", e => {
 window.addEventListener("popstate", route);
 window.addEventListener("hashchange", route);
 
-route();   // initial load
-
 
 /* =========================================================
-   Render Exhibition rooms
-   ---------------------------------------------------------
-   M2 rooms: student names link to their project page.
-   U3:       no links (no project pages exist for U3).
+   Render Exhibition rooms (single 4-col grid)
    ========================================================= */
 
 function renderRoomCard(room) {
@@ -350,30 +360,41 @@ function renderRoomCard(room) {
   `;
 }
 
-document.querySelectorAll("[data-rooms-mount]").forEach(mount => {
-  const floor = mount.dataset.floor;
-  const rooms = ROOMS.filter(r => r.floor === floor);
-  mount.innerHTML = rooms.map(renderRoomCard).join("");
-});
+function renderExhibition() {
+  const mount = document.querySelector("[data-exhibition-mount]");
+  if (!mount) return;
 
-document.querySelectorAll("[data-plan]").forEach(img => {
-  const id = img.dataset.plan;
-  autoLoadImage(img, `${PATHS.plans.dir}/${id}`, PATHS.plans.exts);
-});
+  const m2 = ROOMS.filter(r => r.floor === "m2");
+  const u3 = ROOMS.filter(r => r.floor === "u3");
+
+  mount.innerHTML = `
+    <h2 class="group__label exhibition-grid__floor--m2">M2, First floor</h2>
+    <h2 class="group__label exhibition-grid__floor--u3">U3, Third floor</h2>
+    ${m2.map(renderRoomCard).join("")}
+    ${u3.map(renderRoomCard).join("")}
+  `;
+
+  // Auto-load each plan image (tries .png, then .jpg, then .jpeg)
+  mount.querySelectorAll("[data-plan]").forEach(img => {
+    const id = img.dataset.plan;
+    autoLoadImage(img, `${PATHS.plans.dir}/${id}`, PATHS.plans.exts);
+  });
+}
 
 
 /* =========================================================
    Render Projects grid
    ========================================================= */
 
-const projectsGrid = document.querySelector("[data-projects-grid]");
-
 function renderProjectsGrid() {
+  const grid = document.querySelector("[data-projects-grid]");
+  if (!grid) return;
+
   const sorted = [...STUDENTS].sort((a, b) =>
     a.localeCompare(b, undefined, { sensitivity: "base" })
   );
 
-  projectsGrid.innerHTML = sorted.map(name => {
+  grid.innerHTML = sorted.map(name => {
     const slug = slugify(name);
     return `
       <li>
@@ -388,13 +409,11 @@ function renderProjectsGrid() {
     `;
   }).join("");
 
-  projectsGrid.querySelectorAll("[data-face]").forEach(img => {
+  grid.querySelectorAll("[data-face]").forEach(img => {
     const slug = img.dataset.face;
     autoLoadImage(img, `${PATHS.faces.dir}/${slug}`, PATHS.faces.exts);
   });
 }
-
-renderProjectsGrid();
 
 
 /* =========================================================
@@ -450,15 +469,12 @@ function renderProjectDetailSkeleton(name) {
 }
 
 async function hydrateProjectDetail(slug, name) {
-  // Face image — top right of the head
   const faceImg = projectDetailMount.querySelector('[data-slot="face"]');
   if (faceImg) autoLoadImage(faceImg, `${PATHS.faces.dir}/${slug}`, PATHS.faces.exts);
 
-  // Project hero image
   const img = projectDetailMount.querySelector('[data-slot="image"]');
   if (img) autoLoadImage(img, `${PATHS.projectImage.dir}/${slug}`, PATHS.projectImage.exts);
 
-  // Text data file
   const data = await fetchProjectText(slug);
   if (!data) return;
 
@@ -492,6 +508,21 @@ async function hydrateProjectDetail(slug, name) {
     }
   }
 }
+
+
+/* =========================================================
+   Bootstrap — load rooms.txt FIRST, then render everything
+   ========================================================= */
+
+async function bootstrap() {
+  await loadRoomsTxt();   // populates ROOMS[*].students from rooms.txt
+
+  renderExhibition();
+  renderProjectsGrid();
+  route();                 // initial route — also handles direct project URLs
+}
+
+bootstrap();
 
 
 /* =========================================================
