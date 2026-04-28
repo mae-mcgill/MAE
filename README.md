@@ -6,18 +6,22 @@ Live at: **https://mae-mcgill.github.io/MAE/** · target domain: **mae-mcgill.ca
 ## Files
 
 ```
-index.html               — the page (all sections in one HTML file)
-styles.css               — typography (Helvetica Neue) + layout
-script.js                — section switching, room renderer, projects renderer
-README.md                — this file
+index.html
+styles.css
+script.js
+README.md
 
 assets/
-  access-plan.png        — venue map shown on the Information page
-  sponsors/              — sponsor logo PNGs (already populated)
-  plans/                 — drop key-plan images here
-  faces/                 — drop student portrait drawings here
-  projects/              — drop project hero images here
+  access-plan.png                    — venue map (Information page)
+  fonts/
+    PPNeueMontreal-Regular.otf       — site typeface
+  sponsors/                          — sponsor logo PNGs
+  plans/                             — key-plan PNGs go here
+  faces/                             — student portrait drawings go here
+  projects/                          — project hero images go here
 ```
+
+**Folder structure matters.** The HTML and JS reference files at specific paths. See "Uploading images" below for the exact rules.
 
 ## Local preview
 
@@ -45,93 +49,93 @@ python3 -m http.server 8000
 
 ---
 
-## How student/project URLs work
+## Uploading images — the rules
 
-Every M2 student gets their own URL automatically:
+**Every file must live at the exact path the code expects.** GitHub does not "find" images by name — it only fetches them from the literal path.
 
-```
-https://mae-mcgill.ca/#project/oscar-lallier
-https://mae-mcgill.ca/#project/tea-canton
-https://mae-mcgill.ca/#project/albane-queinnec-barreau
-```
+### The expected paths
 
-The slug (`oscar-lallier`) is generated automatically from the name — accents and capitals are normalized. To find a slug, take the student's name, lowercase it, strip accents, and replace spaces with hyphens.
+| What                     | Where it must live                                 |
+|--------------------------|----------------------------------------------------|
+| Sponsor logos            | `assets/sponsors/<filename>.png`                   |
+| Key plans                | `assets/plans/<id>.png` (e.g. `101.png`)           |
+| Student portraits        | `assets/faces/<slug>.png` (e.g. `oscar-lallier.png`) |
+| Project hero images      | `assets/projects/<slug>.jpg`                       |
+| Access plan              | `assets/access-plan.png`                           |
+| Font                     | `assets/fonts/PPNeueMontreal-Regular.otf`          |
 
-These links are shareable. You can hand a student their direct URL.
+If a sponsor PNG is at the **root** of the repo (just `260424-MAE_SPONSORS-LOGOS_ASA.png`), the browser will try to fetch `assets/sponsors/260424-MAE_SPONSORS-LOGOS_ASA.png` and fail with a broken-image icon. The fix is to put it in the right folder.
 
----
+### Uploading via the GitHub web UI (no command line needed)
 
-## Where do I upload things?
+The trick: GitHub's drag-and-drop uploader puts files **wherever you currently are** in the repo. So navigate INTO the folder first, then drop.
 
-### Sponsor logos → `assets/sponsors/`
-Already wired up (9 logos). To add more or swap, drop the PNG in this folder and add an `<img class="sponsor-logo" …>` line to the `.sponsors__logos` block in `index.html`.
+1. On the repo page, click the `assets` folder. (If it doesn't exist yet, see "Creating folders" below.)
+2. Click `sponsors` (or whichever subfolder you need).
+3. Click **Add file → Upload files**.
+4. Drag your PNGs into the page, scroll down, "Commit changes."
 
-### Key plans → `assets/plans/`
-Save plans as `assets/plans/101.png`, `102.png`, `114.png`, `312.png`. In `script.js`, set the `plan` field on the matching room:
-```js
-{ id: "101", name: "Room 101", floor: "m2", plan: "assets/plans/101.png", students: [...] }
-```
+### Creating folders that don't exist yet
 
-### Student portraits → `assets/faces/`
-Save each portrait as `assets/faces/<slug>.png` (e.g. `assets/faces/oscar-lallier.png`). In `script.js`, add the `face` field to that student:
-```js
-{ name: "Oscar Lallier", face: "assets/faces/oscar-lallier.png" }
-```
-Until set, the projects grid shows the student's initials as a placeholder.
+GitHub doesn't have a "new folder" button. Workaround:
 
-### Project hero images → `assets/projects/`
-Save as `assets/projects/<slug>.jpg` (or `.png`). In `script.js`, add the `image` field:
-```js
-{ name: "Oscar Lallier", image: "assets/projects/oscar-lallier.jpg" }
-```
+1. Click **Add file → Create new file**.
+2. In the filename box, type the **full path** with slashes:
+   ```
+   assets/faces/.gitkeep
+   ```
+   The slashes create the folder tree on the way down.
+3. Commit. The folder now exists and you can navigate into it and drag PNGs in.
 
-### Venue map (Information page)
-Already wired. Replace the file at `assets/access-plan.png` to swap.
+### Drag-and-drop a whole folder (fastest)
+
+1. On your computer, organise everything into a folder that mirrors the structure above.
+2. On the repo's main page, click **Add file → Upload files**.
+3. Drag the **entire `assets` folder** onto the upload area. GitHub preserves the subfolders.
+4. Commit. Done in one shot.
 
 ---
 
 ## Where do I update info?
 
-Almost everything content-related lives in **two places**:
+### `script.js` — student & room data
 
-### `script.js` — the data file
-
-#### **`STUDENTS`** (top of file)
-The master list of M2 students. Each entry is one object:
+#### **`STUDENTS`** (top of the file)
 ```js
 {
   name:    "Oscar Lallier",                       // required
   title:   "The Project Title",                   // optional
   advisor: "Advisor's Name",                      // optional
-  text:    "Project description… (~400 words).",  // optional, supports paragraph breaks via blank lines
+  text:    "Project description (≈400 words).",   // optional
   face:    "assets/faces/oscar-lallier.png",      // optional
   image:   "assets/projects/oscar-lallier.jpg",   // optional
 }
 ```
-Add fields as info comes in. Anything missing shows a "coming soon" placeholder.
+Anything missing shows a "coming soon" placeholder on that student's page.
 
-For multi-paragraph project text, use a JS template literal with blank lines between paragraphs:
+For **multi-paragraph project text**, write it as a backtick template literal with blank lines between paragraphs:
 ```js
-text: `First paragraph here.
+text: `First paragraph.
 
-Second paragraph here.
+Second paragraph.
 
-Third paragraph here.`,
+Third paragraph.`,
 ```
 
 #### **`ROOMS`**
-Assigns students to rooms. Each room:
 ```js
 { id: "101", name: "Room 101", floor: "m2", plan: null, students: [] }
 ```
-Drop names into `students` in the order you want them numbered on the page.
-`floor` is `"m2"` (first floor) or `"u3"` (third floor) — controls which Exhibition group it appears under.
+Add names into `students` in the order you want them numbered on the room card.
+Once a student is in a room, their individual project page will automatically display the room name (no duplicate work).
 
-### `index.html` — everything else
-- **Header / footer** text (address, dates, Instagram URL).
-- **Home brochure paragraph** (`.home-paras`).
-- **Sponsors thank-you line + logo `<img>` tags** (`.sponsors`).
-- **Information page text + map** (`<section id="information">`).
+`floor` is `"m2"` (first floor) or `"u3"` (third floor).
+
+### `index.html` — text on the page
+- Header / footer text (address, dates, Instagram URL).
+- Home brochure paragraph (`.home-paras`).
+- Sponsors thank-you line + the 9 logo `<img>` tags (`.sponsors`).
+- Information page text + map (`<section id="information">`).
 
 ### `styles.css` — visual tuning
 Top of file:
@@ -140,13 +144,12 @@ Top of file:
 --text:         #0a0a0a;
 --text-muted:   #b8b8b8;
 ```
-For the giant MAE logo size, search `.hero--home` and adjust the `30vw` in the clamp.
+For the giant MAE logo size on the home page, search `.hero--home` and adjust the `30vw` value.
 
 ---
 
 ## Notes
 
-- Section URLs use hash routing. Browser back/forward works.
-- Subroutes for individual projects: `#project/<slug>`. The slug is auto-derived from the student's name.
-- The cursor dot trails the mouse with easing on desktop, hidden on touch devices.
-- Helvetica Neue is enforced on every element, weight 400 only, italic disabled.
+- **Typeface** is PP Neue Montreal Regular (self-hosted from `assets/fonts/`). The `@font-face` rule in `styles.css` declares it; the body uses it via `--font`. If the file is missing the page falls back to Helvetica Neue → Helvetica → Arial automatically.
+- Section URLs use hash routing (`#exhibition`, `#projects`). Subroutes for individual projects are `#project/<slug>`. The slug is auto-derived from the student's name.
+- The cursor dot trails the mouse on desktop, hidden on touch devices.

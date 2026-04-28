@@ -1,8 +1,15 @@
 /* =========================================================
    MAE 2026 — McGill Architecture Exhibition
-   Helvetica Neue · weight 400 · no italics
-   Single tracking value: -0.04em (≈ "−0.15") everywhere
+   Typeface · PP Neue Montreal Regular  (self-hosted)
    ========================================================= */
+
+@font-face {
+  font-family: "PP Neue Montreal";
+  src: url("assets/fonts/PPNeueMontreal-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   --bg:           #ffffff;
@@ -13,14 +20,10 @@
   --track:        -0.04em;
 
   --font:
+    "PP Neue Montreal",
     "Helvetica Neue",
-    "HelveticaNeue",
     Helvetica,
-    -apple-system,
-    BlinkMacSystemFont,
     Arial,
-    "Liberation Sans",
-    "Nimbus Sans L",
     sans-serif;
 
   --pad-x: clamp(20px, 4vw, 56px);
@@ -385,13 +388,15 @@ main {
 }
 
 /* =========================================================
-   Projects — detail view (single student page)
+   Projects — detail view (more space, more breath)
    ========================================================= */
 
 .project-detail {
-  display: grid;
-  grid-template-rows: auto auto auto auto;
-  gap: clamp(24px, 3vw, 48px);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(56px, 7vw, 120px);
 }
 
 .project-back {
@@ -399,23 +404,31 @@ main {
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: max-content;
+  margin-bottom: clamp(-32px, -2vw, -16px);  /* tighten the gap right after Back */
   transition: color 220ms ease;
 }
 .project-back:hover { color: var(--text); }
 .project-back::before { content: "←"; }
 
+.project-detail__head {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 3vw, 48px);
+}
+
 .project-detail__name {
   font-weight: 400;
-  font-size: clamp(40px, 6.5vw, 110px);
-  line-height: 0.95;
+  font-size: clamp(56px, 9.5vw, 160px);
+  line-height: 0.92;
   margin: 0;
 }
 
 .project-detail__title {
-  font-size: clamp(20px, 1.6vw, 28px);
+  font-size: clamp(22px, 1.9vw, 34px);
   color: var(--text-muted);
+  line-height: 1.2;
   margin: 0;
   max-width: 800px;
 }
@@ -423,7 +436,7 @@ main {
 .project-detail__body {
   display: grid;
   grid-template-columns: 5fr 4fr;
-  gap: clamp(32px, 4vw, 72px);
+  gap: clamp(48px, 6vw, 110px);
   align-items: start;
 }
 
@@ -443,21 +456,35 @@ main {
 .project-detail__meta {
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, 2vw, 32px);
+  gap: clamp(36px, 4vw, 64px);
 }
 
-.project-detail__advisor {
-  font-size: clamp(14px, 1.0vw, 17px);
+.project-detail__facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(24px, 2.4vw, 40px);
+}
+
+.project-detail__fact-label {
+  font-size: clamp(12px, 0.85vw, 14px);
   color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
-.project-detail__advisor strong {
+
+.project-detail__fact-value {
+  font-size: clamp(16px, 1.2vw, 22px);
   color: var(--text);
-  font-weight: 400;
+  line-height: 1.25;
 }
+
+.project-detail__fact-value--pending { color: var(--text-muted); }
 
 .project-detail__text {
   font-size: clamp(15px, 1.1vw, 18px);
-  line-height: 1.5;
+  line-height: 1.55;
   color: var(--text);
 }
 
@@ -470,7 +497,8 @@ main {
 }
 
 @media (max-width: 800px) {
-  .project-detail__body { grid-template-columns: 1fr; }
+  .project-detail__body  { grid-template-columns: 1fr; }
+  .project-detail__facts { grid-template-columns: 1fr 1fr; }
 }
 
 /* =========================================================
@@ -513,7 +541,7 @@ main {
 }
 
 /* =========================================================
-   Footer  ·  longer event-window string in the middle
+   Footer
    ========================================================= */
 
 .foot {
@@ -543,7 +571,6 @@ main {
 }
 .foot-social:hover { color: var(--text); }
 
-/* The middle string is long — collapse it earlier */
 @media (max-width: 900px) {
   .foot-date { display: none; }
 }

@@ -12,6 +12,9 @@
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23000'/%3E%3C/svg%3E" />
 
+  <!-- Preload the custom typeface so first paint uses it -->
+  <link rel="preload" as="font" type="font/otf" href="assets/fonts/PPNeueMontreal-Regular.otf" crossorigin>
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -91,8 +94,8 @@
         <ul class="projects-grid" data-projects-grid></ul>
       </div>
 
-      <!-- detail view (rendered by JS for an individual student) -->
-      <div data-project-detail hidden></div>
+      <!-- detail view (rendered by JS) — hidden initially via inline style -->
+      <div data-project-detail style="display:none"></div>
     </section>
 
     <!-- ============ INFORMATION ============ -->

@@ -16,15 +16,11 @@
      title     — the project title         (string)
      advisor   — name of advisor           (string)
      text      — project description       (string, ~400 words)
-     image     — path to project image     (string, e.g. "assets/projects/oscar-lallier.jpg")
-     face      — path to portrait drawing  (string, e.g. "assets/faces/oscar-lallier.png")
+     image     — path to project image     (e.g. "assets/projects/oscar-lallier.jpg")
+     face      — path to portrait drawing  (e.g. "assets/faces/oscar-lallier.png")
 
-   Until a `face` is provided, the projects grid shows initials in a placeholder.
-   Until `title`, `advisor`, `text`, `image` are set, the project page shows
-   "coming soon" placeholders for each.
-
-   The URL slug for each student is auto-generated from the name. Edit names
-   here and the slug in the URL updates automatically.
+   The room a student is in is taken from the ROOMS array below — no
+   need to set it on the student.
    ========================================================= */
 
 const STUDENTS = [
@@ -92,7 +88,7 @@ function escapeHTML(s) {
 function slugify(name) {
   return name
     .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")  // strip accents
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
@@ -107,7 +103,11 @@ function initials(name) {
     .toUpperCase();
 }
 
-// Map slug → student object, built once on load
+function findRoomForStudent(name) {
+  const room = ROOMS.find(r => r.students.includes(name));
+  return room ? room.name : null;
+}
+
 const STUDENT_BY_SLUG = Object.fromEntries(
   STUDENTS.map(s => [slugify(s.name), s])
 );
@@ -120,8 +120,8 @@ const STUDENT_BY_SLUG = Object.fromEntries(
 const navLinks = document.querySelectorAll(".nav-link");
 const sections = document.querySelectorAll(".section");
 
-const projectsListMount   = document.querySelector("[data-projects-list]");
-const projectDetailMount  = document.querySelector("[data-project-detail]");
+const projectsListMount  = document.querySelector("[data-projects-list]");
+const projectDetailMount = document.querySelector("[data-project-detail]");
 
 function setActiveSection(id) {
   sections.forEach(s => s.classList.toggle("active", s.id === id));
@@ -131,21 +131,21 @@ function setActiveSection(id) {
 
 function showProjectsList() {
   setActiveSection("projects");
-  projectsListMount.hidden  = false;
-  projectDetailMount.hidden = true;
+  projectsListMount.style.display  = "";
+  projectDetailMount.style.display = "none";
   document.title = "Projects · MAE · McGill Architecture Exhibition · 2026";
 }
 
 function showProjectDetail(slug) {
   const student = STUDENT_BY_SLUG[slug];
-  if (!student) {                 // unknown slug → fall back to list
+  if (!student) {
     location.hash = "#projects";
     return;
   }
 
   setActiveSection("projects");
-  projectsListMount.hidden  = true;
-  projectDetailMount.hidden = false;
+  projectsListMount.style.display  = "none";
+  projectDetailMount.style.display = "";
   projectDetailMount.innerHTML = renderProjectDetail(student);
   document.title = `${student.name} · MAE 2026`;
 }
@@ -160,35 +160,51 @@ function route() {
     return;
   }
 
+  // Anything that's not a known section → home
   if (!document.getElementById(raw)) {
     setActiveSection("home");
+    document.title = "MAE · McGill Architecture Exhibition · 2026";
     return;
   }
 
-  // Plain top-level route — make sure the projects detail is reset
   if (raw === "projects") {
     showProjectsList();
   } else {
     setActiveSection(raw);
   }
 
-  // Reset doc title to the section name
   if (raw === "home")        document.title = "MAE · McGill Architecture Exhibition · 2026";
   if (raw === "exhibition")  document.title = "Exhibition · MAE · McGill Architecture Exhibition · 2026";
   if (raw === "information") document.title = "Information · MAE · McGill Architecture Exhibition · 2026";
 }
 
-// Intercept clicks on header nav links so we get the smooth swap
-navLinks.forEach(a => {
-  a.addEventListener("click", e => {
-    e.preventDefault();
-    const target = a.dataset.target;
-    location.hash = target === "home" ? "" : "#" + target;
-    if (target === "home") route();   // empty hash doesn't fire hashchange reliably
-  });
+/* Single delegated click handler for ALL hash links anywhere on the page —
+   header nav AND dynamically rendered links like the project "Back" link.
+   This is the bulletproof way; we don't depend on inline handlers being
+   re-attached after innerHTML rewrites. */
+document.addEventListener("click", e => {
+  const link = e.target.closest('a[href^="#"]');
+  if (!link) return;
+  if (link.target === "_blank") return;
+
+  const newHash = link.getAttribute("href");
+  e.preventDefault();
+
+  // The "MAE" link points to #home; we want a clean URL with no hash there.
+  const wantHome = link.dataset.target === "home" || newHash === "#home";
+  const targetHash = wantHome ? "" : newHash;
+
+  if (location.hash === targetHash || (wantHome && !location.hash)) {
+    route();                       // same hash → re-run router manually
+  } else {
+    history.pushState(null, "", targetHash || location.pathname);
+    route();
+  }
 });
 
+window.addEventListener("popstate", route);
 window.addEventListener("hashchange", route);
+
 route();   // initial load
 
 
@@ -258,7 +274,19 @@ renderProjectsGrid();
    Render Project detail (single student page)
    ========================================================= */
 
+function fact(label, value, pending) {
+  const cls = pending ? "project-detail__fact-value project-detail__fact-value--pending" : "project-detail__fact-value";
+  return `
+    <div>
+      <span class="project-detail__fact-label">${escapeHTML(label)}</span>
+      <span class="${cls}">${escapeHTML(value)}</span>
+    </div>
+  `;
+}
+
 function renderProjectDetail(s) {
+  const room = findRoomForStudent(s.name);
+
   const titleHTML = s.title
     ? `<p class="project-detail__title">${escapeHTML(s.title)}</p>`
     : `<p class="project-detail__title project-detail__pending">Project title — coming soon</p>`;
@@ -267,9 +295,12 @@ function renderProjectDetail(s) {
     ? `<img class="project-detail__image" src="${escapeHTML(s.image)}" alt="${escapeHTML(s.title || s.name)}">`
     : `<div class="project-detail__image">Project image — coming soon</div>`;
 
-  const advisorHTML = s.advisor
-    ? `<p class="project-detail__advisor">Advisor — <strong>${escapeHTML(s.advisor)}</strong></p>`
-    : `<p class="project-detail__advisor">Advisor — coming soon</p>`;
+  const factsHTML = `
+    <div class="project-detail__facts">
+      ${fact("Room",    room      || "TBA",     !room)}
+      ${fact("Advisor", s.advisor || "Coming soon", !s.advisor)}
+    </div>
+  `;
 
   const textHTML = s.text
     ? `<div class="project-detail__text">${
@@ -278,14 +309,20 @@ function renderProjectDetail(s) {
     : `<p class="project-detail__pending">Project description — coming soon (≈400 words).</p>`;
 
   return `
-    <a class="project-back" href="#projects">Back to projects</a>
-    <h1 class="project-detail__name">${escapeHTML(s.name)}</h1>
-    ${titleHTML}
-    <div class="project-detail__body">
-      ${imageHTML}
-      <div class="project-detail__meta">
-        ${advisorHTML}
-        ${textHTML}
+    <div class="project-detail">
+      <a class="project-back" href="#projects">Back to projects</a>
+
+      <div class="project-detail__head">
+        <h1 class="project-detail__name">${escapeHTML(s.name)}</h1>
+        ${titleHTML}
+      </div>
+
+      <div class="project-detail__body">
+        ${imageHTML}
+        <div class="project-detail__meta">
+          ${factsHTML}
+          ${textHTML}
+        </div>
       </div>
     </div>
   `;
