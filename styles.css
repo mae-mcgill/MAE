@@ -240,7 +240,6 @@ main {
   align-items: center;
 }
 
-.sponsor-slot,
 .sponsor-logo {
   width: 100%;
   height: 70px;
@@ -252,13 +251,6 @@ main {
   transition: filter 220ms ease;
 }
 .sponsor-logo:hover { filter: opacity(1); }
-
-.sponsor-slot {
-  border: 1px dashed var(--hairline);
-  background: #fafafa;
-  font-size: 12px;
-  color: var(--text-muted);
-}
 
 /* =========================================================
    Group  ·  used by Exhibition
@@ -296,19 +288,30 @@ main {
   color: var(--text);
 }
 
+/* Plan area uses the same image-over-placeholder pattern */
 .room-card__plan {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
   border: 1px dashed var(--hairline);
   background: #fafafa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+}
+.room-card__plan-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
   font-size: 12px;
   color: var(--text-muted);
-  object-fit: contain;
 }
+.room-card__plan-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  background: #fff;
+}
+.room-card__plan-img.is-loaded { opacity: 1; }
 
 .room-card__list {
   font-size: clamp(14px, 1.0vw, 17px);
@@ -353,14 +356,13 @@ main {
   cursor: pointer;
 }
 
+/* Face area: placeholder behind, image fades in over it */
 .project-card__face {
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   background: #fafafa;
   border: 1px solid var(--hairline);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
   transition: border-color 220ms ease, transform 220ms ease;
 }
@@ -369,17 +371,22 @@ main {
   transform: translateY(-2px);
 }
 
-.project-card__face img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.project-card__face--placeholder {
+.project-card__face-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
   font-size: clamp(28px, 2.4vw, 40px);
   color: var(--text-muted);
 }
+
+.project-card__face-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  background: #fff;
+}
+.project-card__face-img.is-loaded { opacity: 1; }
 
 .project-card__name {
   font-size: clamp(14px, 1.0vw, 17px);
@@ -388,7 +395,7 @@ main {
 }
 
 /* =========================================================
-   Projects — detail view (more space, more breath)
+   Projects — detail view
    ========================================================= */
 
 .project-detail {
@@ -406,7 +413,7 @@ main {
   align-items: center;
   gap: 8px;
   width: max-content;
-  margin-bottom: clamp(-32px, -2vw, -16px);  /* tighten the gap right after Back */
+  margin-bottom: clamp(-32px, -2vw, -16px);
   transition: color 220ms ease;
 }
 .project-back:hover { color: var(--text); }
@@ -440,18 +447,30 @@ main {
   align-items: start;
 }
 
+/* Project hero image: same placeholder pattern */
 .project-detail__image {
+  position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: #fafafa;
   border: 1px dashed var(--hairline);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #fafafa;
+  overflow: hidden;
+}
+.project-detail__image-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
   font-size: 12px;
   color: var(--text-muted);
-  object-fit: contain;
 }
+.project-detail__image-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  background: #fff;
+}
+.project-detail__image-img.is-loaded { opacity: 1; }
 
 .project-detail__meta {
   display: flex;
@@ -574,10 +593,6 @@ main {
 @media (max-width: 900px) {
   .foot-date { display: none; }
 }
-
-/* =========================================================
-   Responsive
-   ========================================================= */
 
 @media (max-width: 600px) {
   .header { font-size: 13px; padding-top: 14px; padding-bottom: 14px; }

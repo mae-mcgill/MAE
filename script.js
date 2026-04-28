@@ -2,61 +2,57 @@
    MAE 2026 — interactions
    - Section switching (home / exhibition / projects / information)
    - Sub-routing for individual project pages: #project/oscar-lallier
-   - Renders Exhibition rooms by floor (M2 first, U3 third)
-   - Renders the Projects grid + the per-student detail view
-   - Cursor-following solid black dot (desktop only)
+   - Auto-discovery of all assets:
+       faces           → assets/faces/<slug>.png
+       project images  → assets/project-images/<slug>.jpg
+       key plans       → assets/plans/<roomid>.png
+       project text    → assets/project-texts/<slug>.txt
+     Files don't need to exist — placeholders show until they do.
    ========================================================= */
 
 
 /* =========================================================
-   STUDENT + PROJECT DATA
+   STUDENTS  ·  master M2 list
    =========================================================
-   Each entry needs at minimum a `name`. Optional fields:
-
-     title     — the project title         (string)
-     advisor   — name of advisor           (string)
-     text      — project description       (string, ~400 words)
-     image     — path to project image     (e.g. "assets/projects/oscar-lallier.jpg")
-     face      — path to portrait drawing  (e.g. "assets/faces/oscar-lallier.png")
-
-   The room a student is in is taken from the ROOMS array below — no
-   need to set it on the student.
+   Just names. Everything else (face, image, title, advisor,
+   description) lives in matching files under assets/ — see
+   the README for filenames and the project-text format.
    ========================================================= */
 
 const STUDENTS = [
-  { name: "Albane Queinnec-Barreau" },
-  { name: "Albert Assy" },
-  { name: "Alyssa Pangilinan" },
-  { name: "Anastasia Cubasova" },
-  { name: "Antoine Kirouac" },
-  { name: "Audrey Boutot" },
-  { name: "Bethany Wakelin" },
-  { name: "Bianca Hacker" },
-  { name: "Bronwyn Bell" },
-  { name: "Dharshini Mahesh Babu" },
-  { name: "Eliza Mihali" },
-  { name: "Félix Bergeron" },
-  { name: "Gaël Haddad" },
-  { name: "Ishaan Anand" },
-  { name: "Jacob Haley" },
-  { name: "Jérémy Turbide" },
-  { name: "Jessica Villarasa" },
-  { name: "Karine Payette" },
-  { name: "Lucas Azar" },
-  { name: "Ludovic Amyot" },
-  { name: "Mallory Kerr" },
-  { name: "Maria Jose Nolasco Ordonez" },
-  { name: "Nicholas Santoianni" },
-  { name: "Nicolea Apostolidis" },
-  { name: "Oscar Lallier" },
-  { name: "Qiqi Liu" },
-  { name: "Sarah Delnour" },
-  { name: "Sean Wolanyk" },
-  { name: "Serena Valles" },
-  { name: "Suehayla Eljaji" },
-  { name: "Sunny Lan" },
-  { name: "Téa Canton" },
-  { name: "Victoria Fratipietro" },
+  "Albane Queinnec-Barreau",
+  "Albert Assy",
+  "Alyssa Pangilinan",
+  "Anastasia Cubasova",
+  "Antoine Kirouac",
+  "Audrey Boutot",
+  "Bethany Wakelin",
+  "Bianca Hacker",
+  "Bronwyn Bell",
+  "Dharshini Mahesh Babu",
+  "Eliza Mihali",
+  "Félix Bergeron",
+  "Gaël Haddad",
+  "Ishaan Anand",
+  "Jacob Haley",
+  "Jérémy Turbide",
+  "Jessica Villarasa",
+  "Karine Payette",
+  "Lucas Azar",
+  "Ludovic Amyot",
+  "Mallory Kerr",
+  "Maria Jose Nolasco Ordonez",
+  "Nicholas Santoianni",
+  "Nicolea Apostolidis",
+  "Oscar Lallier",
+  "Qiqi Liu",
+  "Sarah Delnour",
+  "Sean Wolanyk",
+  "Serena Valles",
+  "Suehayla Eljaji",
+  "Sunny Lan",
+  "Téa Canton",
+  "Victoria Fratipietro",
 ];
 
 
@@ -66,13 +62,25 @@ const STUDENTS = [
 
 const ROOMS = [
   // M2 — first floor
-  { id: "101", name: "Room 101", floor: "m2", plan: null, students: [] },
-  { id: "102", name: "Room 102", floor: "m2", plan: null, students: [] },
-  { id: "114", name: "Room 114", floor: "m2", plan: null, students: [] },
+  { id: "101", name: "Room 101", floor: "m2", students: [] },
+  { id: "102", name: "Room 102", floor: "m2", students: [] },
+  { id: "114", name: "Room 114", floor: "m2", students: [] },
 
   // U3 — third floor
-  { id: "312", name: "Room 312", floor: "u3", plan: null, students: [] },
+  { id: "312", name: "Room 312", floor: "u3", students: [] },
 ];
+
+
+/* =========================================================
+   Asset paths and accepted extensions
+   ========================================================= */
+
+const PATHS = {
+  faces:        { dir: "assets/faces",          exts: ["png", "jpg", "jpeg", "webp"] },
+  projectImage: { dir: "assets/project-images", exts: ["jpg", "jpeg", "png", "webp"] },
+  plans:        { dir: "assets/plans",          exts: ["png", "jpg", "jpeg"] },
+  text:         { dir: "assets/project-texts",  ext:  "txt" },
+};
 
 
 /* =========================================================
@@ -109,8 +117,88 @@ function findRoomForStudent(name) {
 }
 
 const STUDENT_BY_SLUG = Object.fromEntries(
-  STUDENTS.map(s => [slugify(s.name), s])
+  STUDENTS.map(name => [slugify(name), name])
 );
+
+
+/* =========================================================
+   Image auto-discovery
+   ---------------------------------------------------------
+   Sets img.src to the first extension; on error, tries the
+   next one. If ALL fail, removes the <img>, leaving the
+   placeholder underneath visible.
+   ========================================================= */
+
+function autoLoadImage(img, basePath, exts) {
+  let i = 0;
+  function loadNext() {
+    if (i >= exts.length) { img.remove(); return; }
+    img.src = `${basePath}.${exts[i]}`;
+    i++;
+  }
+  img.addEventListener("load",  () => img.classList.add("is-loaded"));
+  img.addEventListener("error", loadNext);
+  loadNext();
+}
+
+
+/* =========================================================
+   Project text-file fetching + parsing
+   ---------------------------------------------------------
+   Format of assets/project-texts/<slug>.txt:
+
+     TITLE: My Project Title
+     ADVISOR: Jane Doe
+
+     The body of the description starts after the first blank
+     line. Multiple paragraphs separated by blank lines.
+
+     Like so.
+
+   All fields optional. Missing keys → "coming soon".
+   ========================================================= */
+
+const projectTextCache = {};
+
+async function fetchProjectText(slug) {
+  if (slug in projectTextCache) return projectTextCache[slug];
+
+  try {
+    const res = await fetch(`${PATHS.text.dir}/${slug}.${PATHS.text.ext}`, { cache: "no-cache" });
+    if (!res.ok) throw new Error("not found");
+    const raw = await res.text();
+    const parsed = parseProjectText(raw);
+    projectTextCache[slug] = parsed;
+    return parsed;
+  } catch {
+    projectTextCache[slug] = null;
+    return null;
+  }
+}
+
+function parseProjectText(raw) {
+  // Split header from body at first blank line
+  const lines = raw.replace(/\r\n/g, "\n").split("\n");
+  let split = lines.findIndex(l => l.trim() === "");
+  if (split < 0) split = lines.length;
+
+  const headerLines = lines.slice(0, split);
+  const bodyLines   = lines.slice(split + 1);
+
+  const meta = {};
+  for (const line of headerLines) {
+    const m = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.+)$/);
+    if (m) meta[m[1].toLowerCase()] = m[2].trim();
+  }
+
+  const body = bodyLines.join("\n").trim();
+
+  return {
+    title:   meta.title   || null,
+    advisor: meta.advisor || null,
+    text:    body || null,
+  };
+}
 
 
 /* =========================================================
@@ -137,8 +225,8 @@ function showProjectsList() {
 }
 
 function showProjectDetail(slug) {
-  const student = STUDENT_BY_SLUG[slug];
-  if (!student) {
+  const name = STUDENT_BY_SLUG[slug];
+  if (!name) {
     location.hash = "#projects";
     return;
   }
@@ -146,21 +234,25 @@ function showProjectDetail(slug) {
   setActiveSection("projects");
   projectsListMount.style.display  = "none";
   projectDetailMount.style.display = "";
-  projectDetailMount.innerHTML = renderProjectDetail(student);
-  document.title = `${student.name} · MAE 2026`;
+
+  // 1. Render skeleton immediately with placeholders
+  projectDetailMount.innerHTML = renderProjectDetailSkeleton(name);
+
+  // 2. Kick off async loads — image + text file
+  hydrateProjectDetail(slug, name);
+
+  document.title = `${name} · MAE 2026`;
 }
 
 function route() {
   const raw = (location.hash || "#home").slice(1) || "home";
 
-  // Sub-route for individual project: #project/oscar-lallier
   if (raw.startsWith("project/")) {
     const slug = raw.split("/")[1] || "";
     showProjectDetail(slug);
     return;
   }
 
-  // Anything that's not a known section → home
   if (!document.getElementById(raw)) {
     setActiveSection("home");
     document.title = "MAE · McGill Architecture Exhibition · 2026";
@@ -178,10 +270,7 @@ function route() {
   if (raw === "information") document.title = "Information · MAE · McGill Architecture Exhibition · 2026";
 }
 
-/* Single delegated click handler for ALL hash links anywhere on the page —
-   header nav AND dynamically rendered links like the project "Back" link.
-   This is the bulletproof way; we don't depend on inline handlers being
-   re-attached after innerHTML rewrites. */
+// One delegated click handler for ALL hash links — header and dynamic
 document.addEventListener("click", e => {
   const link = e.target.closest('a[href^="#"]');
   if (!link) return;
@@ -190,12 +279,11 @@ document.addEventListener("click", e => {
   const newHash = link.getAttribute("href");
   e.preventDefault();
 
-  // The "MAE" link points to #home; we want a clean URL with no hash there.
   const wantHome = link.dataset.target === "home" || newHash === "#home";
   const targetHash = wantHome ? "" : newHash;
 
   if (location.hash === targetHash || (wantHome && !location.hash)) {
-    route();                       // same hash → re-run router manually
+    route();
   } else {
     history.pushState(null, "", targetHash || location.pathname);
     route();
@@ -213,10 +301,6 @@ route();   // initial load
    ========================================================= */
 
 function renderRoomCard(room) {
-  const planHTML = room.plan
-    ? `<img class="room-card__plan" src="${escapeHTML(room.plan)}" alt="Key plan for ${escapeHTML(room.name)}">`
-    : `<div class="room-card__plan">Key plan — coming soon</div>`;
-
   const listHTML = room.students.length
     ? `<ol class="room-card__list">${
         room.students.map(s => `<li><span>${escapeHTML(s)}</span></li>`).join("")
@@ -226,7 +310,10 @@ function renderRoomCard(room) {
   return `
     <article class="room-card" data-room="${escapeHTML(room.id)}">
       <h3 class="room-card__title">${escapeHTML(room.name)}</h3>
-      ${planHTML}
+      <div class="room-card__plan">
+        <span class="room-card__plan-placeholder">Key plan — coming soon</span>
+        <img class="room-card__plan-img" data-plan="${escapeHTML(room.id)}" alt="Key plan for ${escapeHTML(room.name)}">
+      </div>
       ${listHTML}
     </article>
   `;
@@ -238,33 +325,45 @@ document.querySelectorAll("[data-rooms-mount]").forEach(mount => {
   mount.innerHTML = rooms.map(renderRoomCard).join("");
 });
 
+// After rooms are rendered, autoload each plan image
+document.querySelectorAll("[data-plan]").forEach(img => {
+  const id = img.dataset.plan;
+  autoLoadImage(img, `${PATHS.plans.dir}/${id}`, PATHS.plans.exts);
+});
+
 
 /* =========================================================
-   Render Projects grid (the list view)
+   Render Projects grid
    ========================================================= */
 
 const projectsGrid = document.querySelector("[data-projects-grid]");
 
 function renderProjectsGrid() {
   const sorted = [...STUDENTS].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+    a.localeCompare(b, undefined, { sensitivity: "base" })
   );
 
-  projectsGrid.innerHTML = sorted.map(s => {
-    const slug = slugify(s.name);
-    const face = s.face
-      ? `<img src="${escapeHTML(s.face)}" alt="Portrait of ${escapeHTML(s.name)}">`
-      : `<span class="project-card__face--placeholder">${escapeHTML(initials(s.name))}</span>`;
-
+  projectsGrid.innerHTML = sorted.map(name => {
+    const slug = slugify(name);
     return `
       <li>
         <a class="project-card" href="#project/${slug}">
-          <div class="project-card__face">${face}</div>
-          <span class="project-card__name">${escapeHTML(s.name)}</span>
+          <div class="project-card__face">
+            <span class="project-card__face-placeholder">${escapeHTML(initials(name))}</span>
+            <img class="project-card__face-img" data-face="${slug}" alt="" loading="lazy">
+          </div>
+          <span class="project-card__name">${escapeHTML(name)}</span>
         </a>
       </li>
     `;
   }).join("");
+
+  // Autoload faces — tries .png, .jpg, .jpeg, .webp; if all fail, the
+  // <img> removes itself and the placeholder behind it shows.
+  projectsGrid.querySelectorAll("[data-face]").forEach(img => {
+    const slug = img.dataset.face;
+    autoLoadImage(img, `${PATHS.faces.dir}/${slug}`, PATHS.faces.exts);
+  });
 }
 
 renderProjectsGrid();
@@ -275,57 +374,89 @@ renderProjectsGrid();
    ========================================================= */
 
 function fact(label, value, pending) {
-  const cls = pending ? "project-detail__fact-value project-detail__fact-value--pending" : "project-detail__fact-value";
+  const cls = pending
+    ? "project-detail__fact-value project-detail__fact-value--pending"
+    : "project-detail__fact-value";
   return `
-    <div>
+    <div data-fact="${escapeHTML(label.toLowerCase())}">
       <span class="project-detail__fact-label">${escapeHTML(label)}</span>
       <span class="${cls}">${escapeHTML(value)}</span>
     </div>
   `;
 }
 
-function renderProjectDetail(s) {
-  const room = findRoomForStudent(s.name);
-
-  const titleHTML = s.title
-    ? `<p class="project-detail__title">${escapeHTML(s.title)}</p>`
-    : `<p class="project-detail__title project-detail__pending">Project title — coming soon</p>`;
-
-  const imageHTML = s.image
-    ? `<img class="project-detail__image" src="${escapeHTML(s.image)}" alt="${escapeHTML(s.title || s.name)}">`
-    : `<div class="project-detail__image">Project image — coming soon</div>`;
-
-  const factsHTML = `
-    <div class="project-detail__facts">
-      ${fact("Room",    room      || "TBA",     !room)}
-      ${fact("Advisor", s.advisor || "Coming soon", !s.advisor)}
-    </div>
-  `;
-
-  const textHTML = s.text
-    ? `<div class="project-detail__text">${
-         escapeHTML(s.text).split(/\n\s*\n/).map(p => `<p>${p}</p>`).join("")
-       }</div>`
-    : `<p class="project-detail__pending">Project description — coming soon (≈400 words).</p>`;
+function renderProjectDetailSkeleton(name) {
+  const room = findRoomForStudent(name);
 
   return `
     <div class="project-detail">
       <a class="project-back" href="#projects">Back to projects</a>
 
       <div class="project-detail__head">
-        <h1 class="project-detail__name">${escapeHTML(s.name)}</h1>
-        ${titleHTML}
+        <h1 class="project-detail__name">${escapeHTML(name)}</h1>
+        <p class="project-detail__title project-detail__pending" data-slot="title">Project title — coming soon</p>
       </div>
 
       <div class="project-detail__body">
-        ${imageHTML}
+        <div class="project-detail__image">
+          <span class="project-detail__image-placeholder">Project image — coming soon</span>
+          <img class="project-detail__image-img" data-slot="image" alt="">
+        </div>
         <div class="project-detail__meta">
-          ${factsHTML}
-          ${textHTML}
+          <div class="project-detail__facts">
+            ${fact("Room",    room      || "TBA",         !room)}
+            ${fact("Advisor", "Coming soon",              true)}
+          </div>
+          <div data-slot="text">
+            <p class="project-detail__pending">Project description — coming soon (≈400 words).</p>
+          </div>
         </div>
       </div>
     </div>
   `;
+}
+
+async function hydrateProjectDetail(slug, name) {
+  // 1. Try to load the project hero image
+  const img = projectDetailMount.querySelector('[data-slot="image"]');
+  if (img) autoLoadImage(img, `${PATHS.projectImage.dir}/${slug}`, PATHS.projectImage.exts);
+
+  // 2. Fetch the .txt data file (parallel with image)
+  const data = await fetchProjectText(slug);
+  if (!data) return;   // file missing — placeholders stay
+
+  // 3. Fill in title
+  if (data.title) {
+    const t = projectDetailMount.querySelector('[data-slot="title"]');
+    if (t) {
+      t.textContent = data.title;
+      t.classList.remove("project-detail__pending");
+    }
+  }
+
+  // 4. Fill in advisor
+  if (data.advisor) {
+    const advisorBlock = projectDetailMount.querySelector('[data-fact="advisor"]');
+    if (advisorBlock) {
+      advisorBlock.innerHTML = `
+        <span class="project-detail__fact-label">Advisor</span>
+        <span class="project-detail__fact-value">${escapeHTML(data.advisor)}</span>
+      `;
+    }
+  }
+
+  // 5. Fill in body text — paragraphs are separated by blank lines
+  if (data.text) {
+    const textSlot = projectDetailMount.querySelector('[data-slot="text"]');
+    if (textSlot) {
+      const paras = data.text
+        .split(/\n\s*\n/)
+        .filter(p => p.trim())
+        .map(p => `<p>${escapeHTML(p.trim())}</p>`)
+        .join("");
+      textSlot.innerHTML = `<div class="project-detail__text">${paras}</div>`;
+    }
+  }
 }
 
 

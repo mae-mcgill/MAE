@@ -12,16 +12,121 @@ script.js
 README.md
 
 assets/
-  access-plan.png                    — venue map (Information page)
   fonts/
     PPNeueMontreal-Regular.otf       — site typeface
   sponsors/                          — sponsor logo PNGs
-  plans/                             — key-plan PNGs go here
-  faces/                             — student portrait drawings go here
-  projects/                          — project hero images go here
+  plans/                             — access plan + key plans
+  faces/                             — student portrait drawings
+  project-images/                    — project hero images
+  project-texts/                     — title / advisor / description
+                                       (one .txt file per student)
 ```
 
-**Folder structure matters.** The HTML and JS reference files at specific paths. See "Uploading images" below for the exact rules.
+---
+
+## How auto-discovery works
+
+You **never edit script.js to add a face, image, plan, or description**. Just upload the file with the right name in the right folder and it shows up automatically. Until a file exists, the page shows a "Coming soon" placeholder for that piece.
+
+## Filename rules
+
+- **Always lowercase**
+- **Use hyphens** between words, never spaces or underscores
+- **No accents** — for "Téa Canton" use `tea-canton`, for "Félix Bergeron" use `felix-bergeron`
+- **No special characters** (apostrophes, periods, accents)
+
+The site computes the expected filename from the student's name. The list of expected slugs is below — copy/paste from there if in doubt.
+
+## File path table
+
+| Asset                   | Path                                          | Accepted extensions       |
+|-------------------------|-----------------------------------------------|---------------------------|
+| Site typeface           | `assets/fonts/PPNeueMontreal-Regular.otf`     | otf                       |
+| Sponsor logo            | `assets/sponsors/<short-name>.png`            | png (transparent BG)      |
+| Access plan             | `assets/plans/access-plan.png`                | png                       |
+| Key plan (per room)     | `assets/plans/<room-id>.png`                  | png, jpg                  |
+| Student portrait        | `assets/faces/<slug>.png`                     | png, jpg, jpeg, webp      |
+| Project hero image      | `assets/project-images/<slug>.jpg`            | jpg, jpeg, png, webp      |
+| Project text (one file) | `assets/project-texts/<slug>.txt`             | txt                       |
+
+`<room-id>` is one of `101`, `102`, `114`, `312`.
+`<slug>` is the student's name, slug-form — see the list below.
+
+---
+
+## The 33 expected slugs
+
+Use these EXACTLY for face/image/text filenames.
+
+```
+albane-queinnec-barreau
+albert-assy
+alyssa-pangilinan
+anastasia-cubasova
+antoine-kirouac
+audrey-boutot
+bethany-wakelin
+bianca-hacker
+bronwyn-bell
+dharshini-mahesh-babu
+eliza-mihali
+felix-bergeron
+gael-haddad
+ishaan-anand
+jacob-haley
+jeremy-turbide
+jessica-villarasa
+karine-payette
+lucas-azar
+ludovic-amyot
+mallory-kerr
+maria-jose-nolasco-ordonez
+nicholas-santoianni
+nicolea-apostolidis
+oscar-lallier
+qiqi-liu
+sarah-delnour
+sean-wolanyk
+serena-valles
+suehayla-eljaji
+sunny-lan
+tea-canton
+victoria-fratipietro
+```
+
+So for Oscar Lallier:
+- `assets/faces/oscar-lallier.png`
+- `assets/project-images/oscar-lallier.jpg`
+- `assets/project-texts/oscar-lallier.txt`
+
+---
+
+## Project text file format
+
+One `.txt` file per student in `assets/project-texts/<slug>.txt`. There's a template at `assets/project-texts/_example.txt` you can duplicate.
+
+Format:
+```
+TITLE: My Project Title
+ADVISOR: Jane Doe
+
+The body of the description starts after the first blank line.
+
+Multiple paragraphs separated by blank lines. Aim for ~400 words.
+
+That's it.
+```
+
+Rules:
+- The header lines (`TITLE:`, `ADVISOR:`) come first, in any order.
+- A **single blank line** separates header from body.
+- The body is plain text — no markdown, no HTML.
+- **Paragraphs in the body are separated by blank lines.**
+- Any field can be omitted; missing fields show "Coming soon" on the project page.
+
+The site fetches this file when a visitor opens that student's page. As soon as you commit a new `.txt` file (or edit an existing one), changes appear on a fresh page load.
+
+---
 
 ## Local preview
 
@@ -29,6 +134,8 @@ assets/
 python3 -m http.server 8000
 # http://localhost:8000
 ```
+
+Note: `fetch()` doesn't work when you open `index.html` directly with a `file://` URL — use the local server above (or just push and check on GitHub Pages).
 
 ## Deploy on GitHub Pages
 
@@ -49,96 +156,37 @@ python3 -m http.server 8000
 
 ---
 
-## Uploading images — the rules
+## What still requires script.js edits
 
-**Every file must live at the exact path the code expects.** GitHub does not "find" images by name — it only fetches them from the literal path.
+Only two things now:
 
-### The expected paths
+### Adding a student to the master list
+`STUDENTS` array, top of `script.js`. Just the name as a string.
 
-| What                     | Where it must live                                 |
-|--------------------------|----------------------------------------------------|
-| Sponsor logos            | `assets/sponsors/<filename>.png`                   |
-| Key plans                | `assets/plans/<id>.png` (e.g. `101.png`)           |
-| Student portraits        | `assets/faces/<slug>.png` (e.g. `oscar-lallier.png`) |
-| Project hero images      | `assets/projects/<slug>.jpg`                       |
-| Access plan              | `assets/access-plan.png`                           |
-| Font                     | `assets/fonts/PPNeueMontreal-Regular.otf`          |
-
-If a sponsor PNG is at the **root** of the repo (just `260424-MAE_SPONSORS-LOGOS_ASA.png`), the browser will try to fetch `assets/sponsors/260424-MAE_SPONSORS-LOGOS_ASA.png` and fail with a broken-image icon. The fix is to put it in the right folder.
-
-### Uploading via the GitHub web UI (no command line needed)
-
-The trick: GitHub's drag-and-drop uploader puts files **wherever you currently are** in the repo. So navigate INTO the folder first, then drop.
-
-1. On the repo page, click the `assets` folder. (If it doesn't exist yet, see "Creating folders" below.)
-2. Click `sponsors` (or whichever subfolder you need).
-3. Click **Add file → Upload files**.
-4. Drag your PNGs into the page, scroll down, "Commit changes."
-
-### Creating folders that don't exist yet
-
-GitHub doesn't have a "new folder" button. Workaround:
-
-1. Click **Add file → Create new file**.
-2. In the filename box, type the **full path** with slashes:
-   ```
-   assets/faces/.gitkeep
-   ```
-   The slashes create the folder tree on the way down.
-3. Commit. The folder now exists and you can navigate into it and drag PNGs in.
-
-### Drag-and-drop a whole folder (fastest)
-
-1. On your computer, organise everything into a folder that mirrors the structure above.
-2. On the repo's main page, click **Add file → Upload files**.
-3. Drag the **entire `assets` folder** onto the upload area. GitHub preserves the subfolders.
-4. Commit. Done in one shot.
+### Assigning students to rooms
+`ROOMS` array. Drop names into the `students:` array of the room they're exhibiting in:
+```js
+{ id: "101", name: "Room 101", floor: "m2", students: [
+  "Albert Assy",
+  "Bianca Hacker",
+  "Lucas Azar"
+]},
+```
+Order in the array becomes the numbered order on the room card. The student's project page automatically picks up the room — no duplicate entry.
 
 ---
 
-## Where do I update info?
+## Editing text on the page (header, footer, etc.)
 
-### `script.js` — student & room data
+In `index.html`:
+- Header / footer text (address, dates, Instagram URL)
+- Home brochure paragraph (`.home-paras`)
+- Sponsors thank-you line + the 9 logo `<img>` tags (`.sponsors`)
+- Information page text + map (`<section id="information">`)
 
-#### **`STUDENTS`** (top of the file)
-```js
-{
-  name:    "Oscar Lallier",                       // required
-  title:   "The Project Title",                   // optional
-  advisor: "Advisor's Name",                      // optional
-  text:    "Project description (≈400 words).",   // optional
-  face:    "assets/faces/oscar-lallier.png",      // optional
-  image:   "assets/projects/oscar-lallier.jpg",   // optional
-}
-```
-Anything missing shows a "coming soon" placeholder on that student's page.
+## Visual tuning
 
-For **multi-paragraph project text**, write it as a backtick template literal with blank lines between paragraphs:
-```js
-text: `First paragraph.
-
-Second paragraph.
-
-Third paragraph.`,
-```
-
-#### **`ROOMS`**
-```js
-{ id: "101", name: "Room 101", floor: "m2", plan: null, students: [] }
-```
-Add names into `students` in the order you want them numbered on the room card.
-Once a student is in a room, their individual project page will automatically display the room name (no duplicate work).
-
-`floor` is `"m2"` (first floor) or `"u3"` (third floor).
-
-### `index.html` — text on the page
-- Header / footer text (address, dates, Instagram URL).
-- Home brochure paragraph (`.home-paras`).
-- Sponsors thank-you line + the 9 logo `<img>` tags (`.sponsors`).
-- Information page text + map (`<section id="information">`).
-
-### `styles.css` — visual tuning
-Top of file:
+In `styles.css`, top of file:
 ```css
 --track:        -0.04em;   /* letter-spacing everywhere */
 --text:         #0a0a0a;
@@ -150,6 +198,6 @@ For the giant MAE logo size on the home page, search `.hero--home` and adjust th
 
 ## Notes
 
-- **Typeface** is PP Neue Montreal Regular (self-hosted from `assets/fonts/`). The `@font-face` rule in `styles.css` declares it; the body uses it via `--font`. If the file is missing the page falls back to Helvetica Neue → Helvetica → Arial automatically.
-- Section URLs use hash routing (`#exhibition`, `#projects`). Subroutes for individual projects are `#project/<slug>`. The slug is auto-derived from the student's name.
+- Section URLs use hash routing. Subroutes for individual projects: `#project/<slug>`. Each student already has a working URL right now (showing all "coming soon" placeholders) — fill in the assets and they go live.
+- **You can replace any image with a new version** by uploading a file with the same path; the site will pick it up immediately (after a hard refresh — browsers cache images).
 - The cursor dot trails the mouse on desktop, hidden on touch devices.
