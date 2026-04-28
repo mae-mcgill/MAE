@@ -1,0 +1,12 @@
+TITLE: Listening Space in a World of Noise
+ADVISOR: Howard Davies
+
+Turning down the music in a car just to read a street sign is an instinctive and almost universal response. When visual tasks get harder, we quiet the noise around us without thinking. But what happens when you cannot filter that noise out at all? For millions of people with hearing differences, every room they enter presents exactly that challenge, not as a temporary inconvenience but as a daily and exhausting reality.
+
+This project starts with a simple yet overlooked truth: hearing is not binary. It is not “normal” or “impaired”. Researcher William Renel calls this auraldiversity: the idea that everyone hears differently and that we all shift in and out of different hearing states throughout our lives due to age, fatigue, illness, medication, or neurodivergence. Yet almost every building we inhabit is designed for the idealized, perfectly hearing listener.
+
+Architecture has consistently failed to design spaces that actually work for how people hear, leaving listeners who fall outside the assumed norm to rely on technology and adapt to the hearing world.
+
+The research was inspired by DeafSpace, a set of design principles developed at Gallaudet University that responds to the sensory and spatial needs of the Deaf community. While DeafSpace offers a powerful spatial language, it is grounded specifically in Deaf culture and sign language communication. This project builds on that foundation and extends it, developing new principles aimed at a broader spectrum of hearing experiences and a wider hearing community.
+
+We are accustomed to solving acoustic problems by compartmentalizing smaller rooms or adding acoustic treatments everywhere. But these solutions typically serve a single purpose. What happens when a room needs to serve many? Rather than starting from scratch, this project explores how existing buildings can be improved into more accessible, well-designed spaces that go beyond acoustic treatments alone. These ideas were tested in McGill’s Macdonald-Harrington Building, a 19th-century architecture school, where hard surfaces, long corridors, and competing noise sources make speech genuinely exhausting for anyone with a hearing difference. Through sound mapping, acoustic measurements, and conversations, this project makes the invisible visible, giving sound a presence that architecture has rarely acknowledged.

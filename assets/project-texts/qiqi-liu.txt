@@ -1,0 +1,16 @@
+TITLE: Industrial Heritage Reconstruction Manual
+ADVISOR: David Covo
+
+This project proposes a modern interpretation of the “Social Condenser,” employing a Programmatic Layering strategy to reconstruct industrial heritage through a contemporary humanistic lens. Using the Shenyang Thermal Power Plant in the Tiexi District of Shenyang, China, as a primary case study, this thesis research aims to develop a universally applicable Reconstruction Manual to transform industrial relics into integrated community hubs.
+
+The selection of the Shenyang Thermal Power Plant stems from the dramatic socio-economic history of the Tiexi District. As one of the biggest industrial bases in 20th-century China, Tiexi faced a sharp decline during the market economy transition of the 1980s. This period triggered the collapse of the traditional worker community system and the layoff of millions, leaving behind a fragmented landscape of vacant industrial voids. While the original “Social Condenser” was rooted in Soviet political ideology, this study advocates for a depoliticized architectural practice. Here, social cohesion no longer originates from top-down mandates but emerges from spontaneous, elastic spatial interactions.
+
+Inspired by OMA’s strategy of programmatic layering, the reconstruction shifts the focus toward social synthesis and resident engagement. The methodology treats the factory’s original production logic: materials, processing, energy conversion, and transportation, as a framework to be translated into a new production process of social participation. As architect Bernard Tschumi posited, architecture is defined not merely by form, but by the events and actions occurring within it. Consequently, this project prioritizes a continuous narrative, framing the site as a dynamic container for social occurrences.
+
+The resulting Design Manual integrates a specific architectural language comprising materials (metal, brick, and furniture), paths, railway, programs, facility pavilions, and the preservation of machinery as industrial sculptures. The reconstruction follows a four-step process:
+
+Identify the Production Logic: Deconstructing the original industrial flow.
+Transfer Modern Programs: Introducing diverse social functions into the existing shells.
+Establish Social Networking: Connecting disparate activities within the site.
+Path Generation: Materializing routes to anchor these interactions within the site.
+Ultimately, this manual transforms industrial heritage from static ruins into a unified, idealized modern industrial community playground, providing a replicable strategy for the revitalization of similar industrial heritage reconstruction.

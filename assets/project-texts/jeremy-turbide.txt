@@ -1,0 +1,14 @@
+TITLE: Achieving Circularity: The Urban Industrial Heritage as a Material Reservoir
+ADVISOR: Michael Jemtrud
+
+The construction industry is consuming and discarding materials at an unsustainable pace, positioning it as a critical lever for environmental transformation. According to the Government of Canada, the sector accounts for roughly 30% of raw material extraction and waste generation, while emissions embedded in building materials remain largely overlooked.
+
+In parallel, accelerated urban redevelopment is reshaping Canadian cities under intense economic and demographic pressures. Millions of new housing units are required to restore affordability, driving rapid, large-scale projects that often prioritize speed and financial return over environmental responsibility. Montréal’s Bridge—Bonaventure district exemplifies this condition: the City plans to introduce several thousand new units by 2050 within a former industrial landscape along the Lachine Canal, placing existing infrastructures at risk of demolition and potentially erasing significant material resources and embodied carbon.
+
+Within this context, the Pointe-du-Moulin sector, home to the Ogilvie Flour Mill, emerges as a critical testing ground. The site retains substantial industrial structures that embody valuable material reserves and cultural memory, offering a unique opportunity to reposition industrial heritage as an active public resource within a circular framework.
+
+In this context, my thesis addresses the following question: how can material stocks embedded in industrial buildings, particularly the Ogilvie Flour Mill, be recovered, revalorized, and reintegrated through circular design strategies to support a public-driven redevelopment model with environmental, social, and economic value? Through a research-creation approach, my project aims to transform industrial “waste” into architectural value, grounding circular economy principles in a real Canadian context.
+
+The methodology follows a four-part systemic framework: ① material stock identification, ② assessment of recovery potential, ③ multi-scalar design development, and ④ evaluation. BIM-based modelling and a Bill of Materials are employed to quantify embedded resources, while Life Cycle Assessment evaluates existing conditions and reuse strategies. Together, these methods are situated within a triple-bottom-line framework that informs a long-term transformation scenario, culminating in the conversion of the Ogilvie Flour Mill into a circularity hub for material reuse and community engagement.
+
+While European cities have advanced urban mining strategies, Canada has yet to operationalize circular construction at architectural and urban scales. This project responds to that gap by proposing a replicable, design-driven methodology grounded in empirical analysis and systems thinking, demonstrating how industrial heritage can become a productive resource for resilient urban transformation.
