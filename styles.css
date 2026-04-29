@@ -194,6 +194,21 @@ main {
   margin: 0;
 }
 
+/* Master key plan on the landing page — sits between MAE wordmark
+   and the descriptive paragraphs. Generously sized but capped. */
+.home-keyplan {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 65vh;
+  height: auto;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+.home-keyplan.is-loaded { opacity: 1; }
+
 .home-paras {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -379,6 +394,10 @@ main {
   gap: 12px;
   cursor: pointer;
 }
+
+/* The M2 easter egg card is not a link; it doesn't navigate anywhere. */
+.project-card--easter { cursor: default; }
+.project-card--easter:hover .project-card__face { transform: none; }
 
 .project-card__face {
   position: relative;
@@ -644,6 +663,46 @@ a.info-contact__value:hover { opacity: 0.55; }
 
 @media (max-width: 600px) {
   .info-contact { grid-template-columns: 1fr; }
+}
+
+/* Organizers — sits below the contact block in the info-text column.
+   Two-column grid of role groups, same visual language as info-contact. */
+.info-organizers {
+  margin-top: clamp(40px, 4vw, 72px);
+}
+
+.info-organizers__heading {
+  font-size: clamp(10px, 0.75vw, 12px);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: clamp(20px, 2.4vw, 32px);
+}
+
+.info-organizers__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(18px, 1.8vw, 28px) clamp(24px, 3vw, 48px);
+}
+
+.info-organizers__group { display: flex; flex-direction: column; }
+
+.info-organizers__label {
+  font-size: clamp(10px, 0.75vw, 12px);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.info-organizers__name {
+  font-size: clamp(13px, 0.95vw, 15px);
+  color: var(--text);
+  line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+  .info-organizers__grid { grid-template-columns: 1fr; }
 }
 
 .info-map {

@@ -70,7 +70,8 @@ const PATHS = {
   projectImage: { dir: "assets/project-images", exts: ["jpg", "jpeg", "png", "webp"] },
   plans:        { dir: "assets/plans",          exts: ["png", "jpg", "jpeg"] },
   text:         { dir: "assets/project-texts",  ext:  "txt" },
-  rooms:        "assets/rooms.txt",
+  rooms:        "assets/text-files/rooms.txt",
+  organizers:   "assets/text-files/organizers.txt",
 };
 
 
@@ -112,6 +113,16 @@ const STUDENT_BY_SLUG = Object.fromEntries(
 );
 
 const STUDENT_SET = new Set(STUDENTS);
+
+
+/* =========================================================
+   Easter egg state — temporary "M2" card on the projects grid
+   when a user clicks Projects while already on Projects list.
+   Resets on any navigation away from the projects list view.
+   ========================================================= */
+
+let projectsEasterEgg = false;
+let _renderedWithEasterEgg = false;
 
 
 /* =========================================================
@@ -181,6 +192,72 @@ async function loadRoomsTxt() {
   } catch (e) {
     console.warn("rooms.txt not loaded — using empty room lists.", e);
   }
+}
+
+
+/* =========================================================
+   organizers.txt parser
+   ---------------------------------------------------------
+   Format:
+     # comments allowed
+     Curation:
+     Jane Doe
+     John Smith
+
+     Web design:
+     Oscar Lallier
+   Returns [{ role: "Curation", names: [...] }, ...]
+   ========================================================= */
+
+function parseOrganizersTxt(raw) {
+  const sections = [];
+  let current = null;
+
+  for (const line of raw.replace(/\r\n/g, "\n").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.startsWith("#")) continue;
+
+    if (trimmed.endsWith(":")) {
+      current = { role: trimmed.slice(0, -1).trim(), names: [] };
+      sections.push(current);
+    } else if (current) {
+      current.names.push(trimmed);
+    }
+  }
+  return sections;
+}
+
+async function loadOrganizersTxt() {
+  try {
+    const res = await fetch(PATHS.organizers, { cache: "no-cache" });
+    if (!res.ok) return [];
+    return parseOrganizersTxt(await res.text());
+  } catch {
+    return [];
+  }
+}
+
+function renderOrganizers(sections) {
+  const mount = document.querySelector("[data-organizers-mount]");
+  if (!mount) return;
+
+  if (!sections.length) {
+    mount.innerHTML = "";
+    return;
+  }
+
+  mount.innerHTML = `
+    <h2 class="info-organizers__heading">Organizers &amp; contributors</h2>
+    <div class="info-organizers__grid">
+      ${sections.map(s => `
+        <div class="info-organizers__group">
+          <span class="info-organizers__label">${escapeHTML(s.role)}</span>
+          ${s.names.map(n => `<span class="info-organizers__name">${escapeHTML(n)}</span>`).join("")}
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 
@@ -255,6 +332,13 @@ function showProjectsList() {
   setActiveSection("projects");
   projectsListMount.style.display  = "";
   projectDetailMount.style.display = "none";
+
+  // If the rendered grid doesn't match the current easter egg state,
+  // re-render. (Avoids a flash when the state hasn't changed.)
+  if (_renderedWithEasterEgg !== projectsEasterEgg) {
+    renderProjectsGrid();
+  }
+
   document.title = "Projects · MAE · McGill Architecture Exhibition · 2026";
 }
 
@@ -277,6 +361,10 @@ function showProjectDetail(slug) {
 
 function route() {
   const raw = (location.hash || "#home").slice(1) || "home";
+
+  // Easter egg: only persist while we're staying on the projects LIST.
+  // Detail pages (project/...) and any other section reset it.
+  if (raw !== "projects") projectsEasterEgg = false;
 
   if (raw.startsWith("project/")) {
     const slug = raw.split("/")[1] || "";
@@ -313,6 +401,22 @@ document.addEventListener("click", e => {
   const targetHash = wantHome ? "" : newHash;
 
   if (location.hash === targetHash || (wantHome && !location.hash)) {
+    // Easter egg: clicking the Projects nav while already on the projects
+    // LIST view (not detail view) appends a temporary M2 card at the end.
+    if (
+      targetHash === "#projects" &&
+      !projectsEasterEgg &&
+      projectsListMount.style.display !== "none"
+    ) {
+      projectsEasterEgg = true;
+      renderProjectsGrid();
+      // Smoothly scroll the new M2 card into view so the egg is visible.
+      requestAnimationFrame(() => {
+        const m2 = document.querySelector(".project-card--easter");
+        if (m2) m2.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      return;
+    }
     route();
   } else {
     history.pushState(null, "", targetHash || location.pathname);
@@ -405,7 +509,7 @@ function renderProjectsGrid() {
     a.localeCompare(b, undefined, { sensitivity: "base" })
   );
 
-  grid.innerHTML = sorted.map(name => {
+  const items = sorted.map(name => {
     const slug = slugify(name);
     return `
       <li>
@@ -418,12 +522,36 @@ function renderProjectsGrid() {
         </a>
       </li>
     `;
-  }).join("");
+  });
+
+  // Easter egg: append a temporary, non-clickable "M2" card at the end.
+  // The face image is expected at assets/faces/M2.png (case-sensitive).
+  if (projectsEasterEgg) {
+    items.push(`
+      <li>
+        <div class="project-card project-card--easter" aria-label="M2 — every face combined">
+          <div class="project-card__face">
+            <span class="project-card__face-placeholder">M2</span>
+            <img class="project-card__face-img" data-face-easter alt="" loading="lazy">
+          </div>
+          <span class="project-card__name">M2</span>
+        </div>
+      </li>
+    `);
+  }
+
+  grid.innerHTML = items.join("");
 
   grid.querySelectorAll("[data-face]").forEach(img => {
     const slug = img.dataset.face;
     autoLoadImage(img, `${PATHS.faces.dir}/${slug}`, PATHS.faces.exts);
   });
+
+  // M2 face is a special-cased filename (capital "M2") so it's loaded directly.
+  const easterImg = grid.querySelector("[data-face-easter]");
+  if (easterImg) autoLoadImage(easterImg, `${PATHS.faces.dir}/M2`, PATHS.faces.exts);
+
+  _renderedWithEasterEgg = projectsEasterEgg;
 }
 
 
@@ -529,9 +657,21 @@ async function bootstrap() {
   // Disable browser scroll restoration so we control it
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
-  await loadRoomsTxt();
+  // Kick off the master key plan load — it's not blocking, runs in parallel.
+  const masterPlanImg = document.querySelector("[data-master-plan]");
+  if (masterPlanImg) {
+    autoLoadImage(masterPlanImg, `${PATHS.plans.dir}/master-key-plan`, PATHS.plans.exts);
+  }
+
+  // Load text files in parallel.
+  const [, organizers] = await Promise.all([
+    loadRoomsTxt(),
+    loadOrganizersTxt(),
+  ]);
+
   renderExhibition();
   renderProjectsGrid();
+  renderOrganizers(organizers);
   route();
 }
 

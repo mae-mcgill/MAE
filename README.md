@@ -9,15 +9,17 @@ Everything below lives in plain `.txt` files or image folders. Drop a file in th
 
 ### File path table
 
-| What                    | Where it goes                                  | File format        |
-|-------------------------|------------------------------------------------|--------------------|
-| Room assignments        | `assets/rooms.txt`                             | text               |
-| Project text per student | `assets/project-texts/<slug>.txt`             | text               |
-| Student portrait        | `assets/faces/<slug>.png`                      | png / jpg / webp   |
-| Project hero image      | `assets/project-images/<slug>.jpg`             | jpg / png / webp   |
-| Key plan (per room)     | `assets/plans/<room-id>.png`                   | png / jpg          |
-| Access plan             | `assets/plans/access-plan.png`                 | png                |
-| Sponsor logos           | `assets/sponsors/<short-name>.png`             | png                |
+| What                     | Where it goes                                  | File format        |
+|--------------------------|------------------------------------------------|--------------------|
+| Room assignments         | `assets/text-files/rooms.txt`                  | text               |
+| Organizers list          | `assets/text-files/organizers.txt`             | text               |
+| Project text per student | `assets/project-texts/<slug>.txt`              | text               |
+| Student portrait         | `assets/faces/<slug>.png`                      | png / jpg / webp   |
+| Project hero image       | `assets/project-images/<slug>.jpg`             | jpg / png / webp   |
+| Master key plan (home)   | `assets/plans/master-key-plan.png`             | png / jpg          |
+| Key plan (per room)      | `assets/plans/<room-id>.png`                   | png / jpg          |
+| Access plan              | `assets/plans/access-plan.png`                 | png                |
+| Sponsor logos            | `assets/sponsors/<short-name>.png`             | png                |
 
 `<room-id>` is one of `101`, `102`, `114`, `312`.
 
@@ -77,7 +79,7 @@ So for Oscar Lallier:
 
 ## How to edit room assignments
 
-Open `assets/rooms.txt`. The format:
+Open `assets/text-files/rooms.txt`. The format:
 
 ```
 ROOM 101
@@ -93,6 +95,21 @@ Félix Bergeron
 ```
 
 Move a name from one room to another by cutting and pasting under the new `ROOM` heading. Order in the file = order shown on the room card. Lines starting with `#` are comments. Names must match the master list exactly (accents included) — typos will log a warning in the browser console.
+
+## How to edit the organizers list
+
+Open `assets/text-files/organizers.txt`. The format groups people by role:
+
+```
+Curation:
+Jane Doe
+John Smith
+
+Web design & development:
+Oscar Lallier
+```
+
+Each role is a heading ending in a colon. Names below, one per line. Blank lines separate sections. Lines starting with `#` are comments. Sections appear on the Information page in the order they're listed in the file.
 
 ## How to write a project page
 
