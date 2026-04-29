@@ -1,0 +1,48 @@
+# MAE 2026 — Organizers and contributors
+#
+# Format:
+#   Each section starts with a role name followed by a colon.
+#   Names go below, one per line.
+#   Blank lines separate sections.
+#   Lines starting with # are comments (ignored).
+#
+# Order on this page = order shown on the Information page.
+# Replace the placeholders below with real names. Roles can be
+# anything — feel free to add/remove sections as needed.
+
+Organization:
+Albane Queinnec-Barreau
+Albert Assy
+Dharshini Mahesh Babu
+Gael Haddad
+Maria Jose Nolasco Ordonez
+Oscar Lallier
+Téa Canton
+
+Communications:
+Albert Assy
+Félix Bergeron
+Maria Jose Nolasco Ordonez
+Nicholas Santoianni
+Suehayla Eljaji
+
+Exhibition design:
+Oscar Lallier
+Gael Haddad
+
+Rooms layout:
+Albane Queinnec-Barreau
+Albert Assy
+
+Banners construction:
+Antoine Kirouac
+
+Web development:
+Oscar Lallier
+
+Acknowledgments:
+Anastasia Cubasova
+Eliza Mihali
+Sarah Delnour
+Serena Valles
+
