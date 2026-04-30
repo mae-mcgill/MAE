@@ -16,7 +16,6 @@ Albert Assy
 Dharshini Mahesh Babu
 Gael Haddad
 Maria Jose Nolasco Ordonez
-Oscar Lallier
 Téa Canton
 
 Communications:
@@ -39,10 +38,7 @@ Gael Haddad
 Illustrations:
 Félix Bergeron
 
-Web development:
-Oscar Lallier
-
-Exhibition design:
+Web & design:
 Oscar Lallier
 
 Acknowledgments:
