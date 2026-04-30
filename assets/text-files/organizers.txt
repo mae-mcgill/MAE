@@ -26,10 +26,6 @@ Maria Jose Nolasco Ordonez
 Nicholas Santoianni
 Suehayla Eljaji
 
-Exhibition design:
-Oscar Lallier
-Gael Haddad
-
 Rooms layout:
 Albane Queinnec-Barreau
 Albert Assy
@@ -37,7 +33,13 @@ Albert Assy
 Banners construction:
 Antoine Kirouac
 
+Cards & stickers:
+Gael Haddad
+
 Web development:
+Oscar Lallier
+
+Exhibition design:
 Oscar Lallier
 
 Acknowledgments:
