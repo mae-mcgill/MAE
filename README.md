@@ -12,12 +12,14 @@ Everything below lives in plain `.txt` files or image folders. Drop a file in th
 | What                     | Where it goes                                  | File format        |
 |--------------------------|------------------------------------------------|--------------------|
 | Room assignments         | `assets/text-files/rooms.txt`                  | text               |
+| U3 advisors (Room 312)   | `assets/text-files/u3-advisors.txt`            | text               |
 | Organizers list          | `assets/text-files/organizers.txt`             | text               |
 | Project text per student | `assets/project-texts/<slug>.txt`              | text               |
 | Student portrait         | `assets/faces/<slug>.png`                      | png / jpg / webp   |
 | Project hero image       | `assets/project-images/<slug>.jpg`             | jpg / png / webp   |
 | Master key plan (home)   | `assets/plans/master-key-plan.png`             | png / jpg          |
-| Key plan (per room)      | `assets/plans/<room-id>.png`                   | png / jpg          |
+| Key plan (room card)     | `assets/plans/<room-id>.png`                   | png / jpg          |
+| Key plan (room page)     | `assets/plans/<room-id>-page.png` (optional)   | png / jpg          |
 | Access plan              | `assets/plans/access-plan.png`                 | png                |
 | Sponsor logos            | `assets/sponsors/<short-name>.png`             | png                |
 
@@ -95,6 +97,26 @@ Félix Bergeron
 ```
 
 Move a name from one room to another by cutting and pasting under the new `ROOM` heading. Order in the file = order shown on the room card. Lines starting with `#` are comments. Names must match the master list exactly (accents included) — typos will log a warning in the browser console.
+
+## How to edit U3 (Room 312) advisors
+
+Open `assets/text-files/u3-advisors.txt`. The format groups U3 students by their advisor:
+
+```
+Evelyne Bouchard:
+Alexandre Shiffman
+Corbin Greer
+...
+
+Howard Davies:
+Abby MacIntosh
+Ciara Bouffard
+...
+```
+
+Each advisor is a heading ending in a colon. Students below, one per line. Blank lines separate advisors. Lines starting with `#` are comments. The advisor names appear on the Room 312 page next to each student — they are display-only (not clickable, not added to the M2 advisor filter on the Projects page).
+
+If you don't list U3 students under `ROOM 312` in `rooms.txt`, the Room 312 page will automatically pull its student list from this file. You only need to edit one place.
 
 ## How to edit the organizers list
 

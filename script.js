@@ -65,6 +65,7 @@ const PATHS = {
   text:         { dir: "assets/project-texts",  ext:  "txt" },
   rooms:        "assets/text-files/rooms.txt",
   organizers:   "assets/text-files/organizers.txt",
+  u3Advisors:   "assets/text-files/u3-advisors.txt",
 };
 
 
@@ -130,6 +131,10 @@ const STUDENT_SET = new Set(STUDENTS);
 const ADVISOR_BY_STUDENT   = {};
 const STUDENTS_BY_ADVISOR  = {};
 const ADVISOR_NAME_BY_SLUG = {};
+
+/* U3 advisor lookup — populated from u3-advisors.txt at boot.
+   These advisors are display-only: not linked, not added to filter chips. */
+const U3_ADVISOR_BY_STUDENT = {};
 
 
 /* =========================================================
@@ -241,6 +246,55 @@ async function loadOrganizersTxt() {
     return parseOrganizersTxt(await res.text());
   } catch {
     return [];
+  }
+}
+
+
+/* =========================================================
+   u3-advisors.txt parser
+   ---------------------------------------------------------
+   Format (mirrors organizers.txt — colon-terminated heading
+   acts as the advisor's name; subsequent lines are students):
+     # comments allowed
+     Evelyne Bouchard:
+     Alexandre Shiffman
+     Corbin Greer
+     ...
+
+     Howard Davies:
+     Abby MacIntosh
+     ...
+
+   Populates U3_ADVISOR_BY_STUDENT (display-only, never linked).
+   ========================================================= */
+
+async function loadU3Advisors() {
+  try {
+    const res = await fetch(PATHS.u3Advisors, { cache: "no-cache" });
+    if (!res.ok) return;
+
+    let currentAdvisor = null;
+    for (const line of (await res.text()).replace(/\r\n/g, "\n").split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (trimmed.startsWith("#")) continue;
+
+      if (trimmed.endsWith(":")) {
+        currentAdvisor = trimmed.slice(0, -1).trim();
+      } else if (currentAdvisor) {
+        U3_ADVISOR_BY_STUDENT[trimmed] = currentAdvisor;
+      }
+    }
+
+    // If rooms.txt didn't list U3 students (the file is the source of
+    // truth for M2 only), populate Room 312's roster from this file.
+    // Order: by advisor section, in file order.
+    const u3Room = ROOMS.find(r => r.floor === "u3");
+    if (u3Room && u3Room.students.length === 0) {
+      u3Room.students = Object.keys(U3_ADVISOR_BY_STUDENT);
+    }
+  } catch (e) {
+    console.warn("u3-advisors.txt not loaded.", e);
   }
 }
 
@@ -581,16 +635,46 @@ function renderExhibition() {
 
 function renderRoomPage(room) {
   const linkStudents = room.floor !== "u3";
+  const isU3 = room.floor === "u3";
 
-  // Sort alphabetically by first name; preserve original room
-  // membership but display in order.
+  // Compute the global starting number for this room — this matches the
+  // continuous numbering shown on the exhibition page. Display order is
+  // M2 rooms first (in ROOMS array order), then U3.
+  const displayOrder = [
+    ...ROOMS.filter(r => r.floor === "m2"),
+    ...ROOMS.filter(r => r.floor === "u3"),
+  ];
+  let globalStart = 1;
+  for (const r of displayOrder) {
+    if (r.id === room.id) break;
+    globalStart += r.students.length;
+  }
+
+  // Each student keeps their global number from rooms.txt order, even
+  // though we display the page alphabetically by first name. So we build
+  // a name→number lookup before sorting.
+  const numberByName = {};
+  room.students.forEach((name, i) => {
+    numberByName[name] = globalStart + i;
+  });
+
   const students = [...room.students].sort(firstNameSort);
 
-  const rosterHTML = students.length ? students.map((name, i) => {
-    const advisor = ADVISOR_BY_STUDENT[name] || null;
-    const advisorHTML = advisor
-      ? `<a class="room-page__advisor" href="#projects/advisor/${slugify(advisor)}">${escapeHTML(advisor)}</a>`
-      : `<span class="room-page__advisor room-page__advisor--pending">Coming soon</span>`;
+  const rosterHTML = students.length ? students.map((name) => {
+    // Pick the right advisor source depending on the floor
+    const advisor = isU3
+      ? (U3_ADVISOR_BY_STUDENT[name] || null)
+      : (ADVISOR_BY_STUDENT[name] || null);
+
+    // U3 advisors are never linked. M2 advisors link to the filtered list.
+    let advisorHTML;
+    if (!advisor) {
+      advisorHTML = `<span class="room-page__advisor room-page__advisor--pending">Coming soon</span>`;
+    } else if (isU3) {
+      advisorHTML = `<span class="room-page__advisor">${escapeHTML(advisor)}</span>`;
+    } else {
+      advisorHTML = `<a class="room-page__advisor" href="#projects/advisor/${slugify(advisor)}">${escapeHTML(advisor)}</a>`;
+    }
 
     const studentHTML = linkStudents
       ? `<a class="room-page__student" href="#project/${slugify(name)}">${escapeHTML(name)}</a>`
@@ -598,7 +682,7 @@ function renderRoomPage(room) {
 
     return `
       <div class="room-page__roster-row">
-        <span class="room-page__num">${i + 1}.</span>
+        <span class="room-page__num">${numberByName[name]}.</span>
         ${studentHTML}
         <div class="room-page__advisor-wrap">
           <span class="room-page__advisor-label">Advisor</span>
@@ -620,8 +704,6 @@ function renderRoomPage(room) {
     </div>
   `;
 
-  // Load the larger "<id>-page.png" image first; fall back to the
-  // smaller "<id>.png" used on the exhibition card if no -page version.
   const planImg = roomMount.querySelector("[data-room-plan]");
   if (planImg) {
     const id = planImg.dataset.roomPlan;
@@ -878,6 +960,7 @@ async function bootstrap() {
     loadRoomsTxt(),
     loadOrganizersTxt(),
     buildAdvisorIndex(),
+    loadU3Advisors(),
   ]);
 
   renderExhibition();
