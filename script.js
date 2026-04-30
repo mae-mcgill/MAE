@@ -307,13 +307,22 @@ function renderOrganizers(sections) {
     return;
   }
 
+  // If a name matches a student in the master list, link to their project
+  // page; otherwise render as plain text (handles non-student contributors).
+  const renderName = (n) => {
+    if (STUDENT_SET.has(n)) {
+      return `<a class="info-organizers__name" href="#project/${slugify(n)}">${escapeHTML(n)}</a>`;
+    }
+    return `<span class="info-organizers__name">${escapeHTML(n)}</span>`;
+  };
+
   mount.innerHTML = `
     <h2 class="info-organizers__heading">Organizers &amp; contributors</h2>
     <div class="info-organizers__grid">
       ${sections.map(s => `
         <div class="info-organizers__group">
           <span class="info-organizers__label">${escapeHTML(s.role)}</span>
-          ${s.names.map(n => `<span class="info-organizers__name">${escapeHTML(n)}</span>`).join("")}
+          ${s.names.map(renderName).join("")}
         </div>
       `).join("")}
     </div>
