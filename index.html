@@ -18,7 +18,6 @@
 </head>
 <body>
 
-  <!-- ============ Header (every page) ============ -->
   <header class="header">
     <a class="header-mae nav-link" href="#home" data-target="home">MAE</a>
     <nav class="header-nav" aria-label="Sections">
@@ -28,7 +27,6 @@
     </nav>
   </header>
 
-  <!-- Cursor-following dot -->
   <div class="circle-cursor" aria-hidden="true"></div>
 
   <main>
@@ -43,7 +41,7 @@
       <img class="home-keyplan" data-master-plan alt="Master key plan of all exhibition rooms">
 
       <div class="home-paras">
-        <p class="home-para">
+        <p class="home-para home-para--prose">
           This exhibition celebrates the culmination of student work carried out in the final year (two terms) of the Master of Architecture professional degree. Each student proposes a self-directed project, framing clear architectural issues and suggesting appropriate means of analysis, design, and representation. Together the students explore, describe, represent, mediate, and politicize a range of issues, sites, and ideas. Most of all, their projects show a deep concern for the consequences of architectural engagement, expanding the possibilities for positive change.
         </p>
         <p class="home-para home-para--muted">
@@ -56,14 +54,14 @@
           With our sincere thanks to the partners and sponsors who made this exhibition possible.
         </p>
         <div class="sponsors__logos" aria-label="Sponsor logos">
-          <img class="sponsor-logo" src="assets/sponsors/asa.png"               alt="ASA">
-          <img class="sponsor-logo" src="assets/sponsors/gasa.png"              alt="GASA">
-          <img class="sponsor-logo" src="assets/sponsors/chevalier-morales.png" alt="Chevalier Morales">
-          <img class="sponsor-logo" src="assets/sponsors/dialog.png"            alt="DIALOG">
-          <img class="sponsor-logo" src="assets/sponsors/dma.png"               alt="DMA">
-          <img class="sponsor-logo" src="assets/sponsors/neuf.png"              alt="NEUF Architect(e)s">
-          <img class="sponsor-logo" src="assets/sponsors/nfoe.png"              alt="NFOE">
-          <img class="sponsor-logo" src="assets/sponsors/stendel-reich.png"     alt="Stendel + Reich">
+          <a class="sponsor-link" href="https://www.instagram.com/mcgill.asa/"   target="_blank" rel="noopener noreferrer"><img class="sponsor-logo" src="assets/sponsors/asa.png"               alt="ASA"></a>
+          <a class="sponsor-link" href="https://www.instagram.com/mcgill.gasa/?g=5" target="_blank" rel="noopener noreferrer"><img class="sponsor-logo" src="assets/sponsors/gasa.png"              alt="GASA"></a>
+          <a class="sponsor-link" href="https://chevaliermorales.com"             target="_blank" rel="noopener noreferrer"><img class="sponsor-logo" src="assets/sponsors/chevalier-morales.png" alt="Chevalier Morales"></a>
+          <a class="sponsor-link" href="https://dialogdesign.ca"                  target="_blank" rel="noopener noreferrer"><img class="sponsor-logo" src="assets/sponsors/dialog.png"            alt="DIALOG"></a>
+          <a class="sponsor-link" href="https://dma-arch.com/en"                  target="_blank" rel="noopener noreferrer"><img class="sponsor-logo" src="assets/sponsors/dma.png"               alt="DMA"></a>
+          <a class="sponsor-link" href="https://www.neuf.ca/fr"                   target="_blank" rel="noopener noreferrer"><img class="sponsor-logo" src="assets/sponsors/neuf.png"              alt="NEUF Architect(e)s"></a>
+          <a class="sponsor-link" href="https://www.nfoe.com/en"                  target="_blank" rel="noopener noreferrer"><img class="sponsor-logo" src="assets/sponsors/nfoe.png"              alt="NFOE"></a>
+          <a class="sponsor-link" href="https://www.stendelreich.com/en"          target="_blank" rel="noopener noreferrer"><img class="sponsor-logo" src="assets/sponsors/stendel-reich.png"     alt="Stendel + Reich"></a>
         </div>
       </div>
     </section>
@@ -78,10 +76,16 @@
     <section id="projects" class="section">
       <div data-projects-list>
         <h1 class="hero">Projects</h1>
+        <nav class="advisor-filter" data-advisor-filter aria-label="Filter projects by advisor"></nav>
         <ul class="projects-grid" data-projects-grid></ul>
       </div>
 
       <div data-project-detail style="display:none"></div>
+    </section>
+
+    <!-- ============ ROOM (rendered into this mount when #room/<id> is active) ============ -->
+    <section id="room" class="section">
+      <div data-room-mount></div>
     </section>
 
     <!-- ============ INFORMATION ============ -->
@@ -90,7 +94,7 @@
 
       <div class="info-grid">
         <div class="info-text">
-          <p class="info-lead">
+          <p class="info-lead info-lead--prose">
             Join us for the final student exhibition showcasing the work of graduating M2 students. Experience a culmination of projects, ideas, and explorations developed over the past year.
           </p>
           <p class="info-meta">

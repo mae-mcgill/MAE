@@ -1,15 +1,18 @@
 /* =========================================================
    MAE 2026 — interactions
    - Section switching (home / exhibition / projects / information)
-   - Sub-routing for individual project pages: #project/oscar-lallier
+   - Sub-routes:
+       #project/<slug>            individual student page
+       #projects/advisor/<slug>   projects filtered by advisor
+       #room/<id>                  full-page room view
    - Auto-discovery of all assets
-   - Room assignments fetched from assets/rooms.txt at boot
-   - Scroll restored to top on every navigation
+   - Room assignments fetched from rooms.txt at boot
+   - Advisor index built from project-texts at boot
    ========================================================= */
 
 
 /* =========================================================
-   STUDENTS  ·  master M2 list (just names)
+   STUDENTS  ·  master list (just names)
    ========================================================= */
 
 const STUDENTS = [
@@ -48,22 +51,12 @@ const STUDENTS = [
   "Victoria Fratipietro",
 ];
 
-
-/* =========================================================
-   ROOMS  ·  metadata. Student lists populated from rooms.txt.
-   ========================================================= */
-
 const ROOMS = [
   { id: "101", name: "Room 101", floor: "m2", students: [] },
   { id: "102", name: "Room 102", floor: "m2", students: [] },
   { id: "114", name: "Room 114", floor: "m2", students: [] },
   { id: "312", name: "Room 312", floor: "u3", students: [] },
 ];
-
-
-/* =========================================================
-   Asset paths
-   ========================================================= */
 
 const PATHS = {
   faces:        { dir: "assets/faces",          exts: ["png", "jpg", "jpeg", "webp"] },
@@ -105,7 +98,17 @@ function initials(name) {
 
 function findRoomForStudent(name) {
   const room = ROOMS.find(r => r.students.includes(name));
-  return room ? room.name : null;
+  return room || null;
+}
+
+function nameSort(a, b) {
+  return a.localeCompare(b, undefined, { sensitivity: "base" });
+}
+
+/* Sort by FIRST name (default localeCompare on "Bianca Hacker" works:
+   "B" < "F" so Bianca < Félix; for "Félix" the accent is folded). */
+function firstNameSort(a, b) {
+  return a.localeCompare(b, undefined, { sensitivity: "base" });
 }
 
 const STUDENT_BY_SLUG = Object.fromEntries(
@@ -116,13 +119,28 @@ const STUDENT_SET = new Set(STUDENTS);
 
 
 /* =========================================================
-   Easter egg state — temporary "M2" card on the projects grid
-   when a user clicks Projects while already on Projects list.
-   Resets on any navigation away from the projects list view.
+   Advisor index — built at boot from per-student .txt files
+   ---------------------------------------------------------
+   Maps:
+     ADVISOR_BY_STUDENT[name]   = "Michael Jemtrud" | null
+     STUDENTS_BY_ADVISOR[slug]  = ["Oscar Lallier", "Albert Assy", ...]
+     ADVISOR_NAME_BY_SLUG[slug] = "Michael Jemtrud"
+   ========================================================= */
+
+const ADVISOR_BY_STUDENT   = {};
+const STUDENTS_BY_ADVISOR  = {};
+const ADVISOR_NAME_BY_SLUG = {};
+
+
+/* =========================================================
+   Easter egg state
    ========================================================= */
 
 let projectsEasterEgg = false;
 let _renderedWithEasterEgg = false;
+
+/* Track currently-active advisor filter ('' = none / "all") */
+let activeAdvisorSlug = "";
 
 
 /* =========================================================
@@ -183,9 +201,7 @@ async function loadRoomsTxt() {
 
       const unknown = names.filter(n => !STUDENT_SET.has(n));
       if (unknown.length) {
-        console.warn(
-          `rooms.txt: names not in STUDENTS list (typo?): ${unknown.join(", ")}`
-        );
+        console.warn(`rooms.txt: names not in STUDENTS list (typo?): ${unknown.join(", ")}`);
       }
       room.students = names;
     }
@@ -197,16 +213,6 @@ async function loadRoomsTxt() {
 
 /* =========================================================
    organizers.txt parser
-   ---------------------------------------------------------
-   Format:
-     # comments allowed
-     Curation:
-     Jane Doe
-     John Smith
-
-     Web design:
-     Oscar Lallier
-   Returns [{ role: "Curation", names: [...] }, ...]
    ========================================================= */
 
 function parseOrganizersTxt(raw) {
@@ -262,26 +268,10 @@ function renderOrganizers(sections) {
 
 
 /* =========================================================
-   Project text parser (per-student .txt file)
+   Project text parser & loader
    ========================================================= */
 
 const projectTextCache = {};
-
-async function fetchProjectText(slug) {
-  if (slug in projectTextCache) return projectTextCache[slug];
-
-  try {
-    const res = await fetch(`${PATHS.text.dir}/${slug}.${PATHS.text.ext}`, { cache: "no-cache" });
-    if (!res.ok) throw new Error("not found");
-    const raw = await res.text();
-    const parsed = parseProjectText(raw);
-    projectTextCache[slug] = parsed;
-    return parsed;
-  } catch {
-    projectTextCache[slug] = null;
-    return null;
-  }
-}
 
 function parseProjectText(raw) {
   const lines = raw.replace(/\r\n/g, "\n").split("\n");
@@ -304,9 +294,53 @@ function parseProjectText(raw) {
   };
 }
 
+async function fetchProjectText(slug) {
+  if (slug in projectTextCache) return projectTextCache[slug];
+
+  try {
+    const res = await fetch(`${PATHS.text.dir}/${slug}.${PATHS.text.ext}`, { cache: "no-cache" });
+    if (!res.ok) throw new Error("not found");
+    const parsed = parseProjectText(await res.text());
+    projectTextCache[slug] = parsed;
+    return parsed;
+  } catch {
+    projectTextCache[slug] = null;
+    return null;
+  }
+}
+
+/* Pre-fetches every student's text file to build the advisor index.
+   Failures are silent — students without text just don't get an advisor. */
+async function buildAdvisorIndex() {
+  const fetches = STUDENTS.map(async (name) => {
+    const slug = slugify(name);
+    const data = await fetchProjectText(slug);
+    if (data && data.advisor) {
+      const advisor = data.advisor;
+      const advSlug = slugify(advisor);
+      ADVISOR_BY_STUDENT[name] = advisor;
+      ADVISOR_NAME_BY_SLUG[advSlug] = advisor;
+      if (!STUDENTS_BY_ADVISOR[advSlug]) STUDENTS_BY_ADVISOR[advSlug] = [];
+      STUDENTS_BY_ADVISOR[advSlug].push(name);
+    } else {
+      ADVISOR_BY_STUDENT[name] = null;
+    }
+  });
+
+  await Promise.all(fetches);
+}
+
 
 /* =========================================================
-   Section switching + sub-routing
+   Routing
+   ---------------------------------------------------------
+   Hash schemes handled:
+     ""                          → home
+     "home" / "exhibition" /
+       "projects" / "information" → top-level sections
+     "project/<slug>"            → student detail page
+     "projects/advisor/<slug>"   → projects filtered by advisor
+     "room/<id>"                 → full-page room view
    ========================================================= */
 
 const navLinks = document.querySelectorAll(".nav-link");
@@ -314,9 +348,9 @@ const sections = document.querySelectorAll(".section");
 
 const projectsListMount  = document.querySelector("[data-projects-list]");
 const projectDetailMount = document.querySelector("[data-project-detail]");
+const roomMount          = document.querySelector("[data-room-mount]");
 
 function scrollTop() {
-  // Always reset to top after a route change
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
@@ -324,7 +358,14 @@ function scrollTop() {
 
 function setActiveSection(id) {
   sections.forEach(s => s.classList.toggle("active", s.id === id));
-  navLinks.forEach(a => a.classList.toggle("is-active", a.dataset.target === id));
+
+  // Header nav highlights — "Exhibition" lights up when on a room page too
+  const navTarget =
+    id === "room" ? "exhibition" :
+    id === "information" ? "information" :
+    id;
+
+  navLinks.forEach(a => a.classList.toggle("is-active", a.dataset.target === navTarget));
   scrollTop();
 }
 
@@ -333,13 +374,13 @@ function showProjectsList() {
   projectsListMount.style.display  = "";
   projectDetailMount.style.display = "none";
 
-  // If the rendered grid doesn't match the current easter egg state,
-  // re-render. (Avoids a flash when the state hasn't changed.)
-  if (_renderedWithEasterEgg !== projectsEasterEgg) {
-    renderProjectsGrid();
-  }
+  // Re-render if grid is out-of-date (easter egg or filter changed)
+  renderProjectsGrid();
+  renderAdvisorFilter();
 
-  document.title = "Projects · MAE · McGill Architecture Exhibition · 2026";
+  document.title = activeAdvisorSlug
+    ? `Projects — ${ADVISOR_NAME_BY_SLUG[activeAdvisorSlug] || "filter"} · MAE`
+    : "Projects · MAE · McGill Architecture Exhibition · 2026";
 }
 
 function showProjectDetail(slug) {
@@ -359,30 +400,59 @@ function showProjectDetail(slug) {
   document.title = `${name} · MAE 2026`;
 }
 
+function showRoomPage(id) {
+  const room = ROOMS.find(r => r.id === id);
+  if (!room) {
+    location.hash = "#exhibition";
+    return;
+  }
+  setActiveSection("room");
+  renderRoomPage(room);
+  document.title = `${room.name} · MAE 2026`;
+}
+
 function route() {
   const raw = (location.hash || "#home").slice(1) || "home";
 
-  // Easter egg: only persist while we're staying on the projects LIST.
-  // Detail pages (project/...) and any other section reset it.
-  if (raw !== "projects") projectsEasterEgg = false;
+  // Reset easter egg whenever leaving the projects list view
+  if (!raw.startsWith("projects") && raw !== "projects") projectsEasterEgg = false;
 
+  // #project/<slug>
   if (raw.startsWith("project/")) {
     const slug = raw.split("/")[1] || "";
     showProjectDetail(slug);
     return;
   }
 
+  // #projects/advisor/<slug>
+  if (raw.startsWith("projects/advisor/")) {
+    activeAdvisorSlug = raw.split("/")[2] || "";
+    showProjectsList();
+    return;
+  }
+
+  // #room/<id>
+  if (raw.startsWith("room/")) {
+    const id = raw.split("/")[1] || "";
+    showRoomPage(id);
+    return;
+  }
+
+  // Plain #projects → clear filter and show list
+  if (raw === "projects") {
+    activeAdvisorSlug = "";
+    showProjectsList();
+    return;
+  }
+
+  // Other top-level routes
   if (!document.getElementById(raw)) {
     setActiveSection("home");
     document.title = "MAE · McGill Architecture Exhibition · 2026";
     return;
   }
 
-  if (raw === "projects") {
-    showProjectsList();
-  } else {
-    setActiveSection(raw);
-  }
+  setActiveSection(raw);
 
   if (raw === "home")        document.title = "MAE · McGill Architecture Exhibition · 2026";
   if (raw === "exhibition")  document.title = "Exhibition · MAE · McGill Architecture Exhibition · 2026";
@@ -401,16 +471,16 @@ document.addEventListener("click", e => {
   const targetHash = wantHome ? "" : newHash;
 
   if (location.hash === targetHash || (wantHome && !location.hash)) {
-    // Easter egg: clicking the Projects nav while already on the projects
-    // LIST view (not detail view) appends a temporary M2 card at the end.
+    // Easter egg trigger: clicking Projects nav while already on the
+    // projects LIST view (no filter, no detail) appends an M2 card.
     if (
       targetHash === "#projects" &&
       !projectsEasterEgg &&
-      projectsListMount.style.display !== "none"
+      projectsListMount.style.display !== "none" &&
+      !activeAdvisorSlug
     ) {
       projectsEasterEgg = true;
       renderProjectsGrid();
-      // Smoothly scroll the new M2 card into view so the egg is visible.
       requestAnimationFrame(() => {
         const m2 = document.querySelector(".project-card--easter");
         if (m2) m2.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -429,10 +499,11 @@ window.addEventListener("hashchange", route);
 
 
 /* =========================================================
-   Render Exhibition rooms — continuous numbering across rooms.
-   We pre-compute each student's global index and pass it via
-   a CSS custom property so the counter starts at the right
-   number for each room.
+   Render Exhibition rooms (single 4-col grid)
+   ---------------------------------------------------------
+   The plan thumbnail is now a link to the full room page.
+   Continuous numbering across rooms (101 starts at 1, 102
+   continues, etc.).
    ========================================================= */
 
 function renderRoomCard(room, startIndex) {
@@ -454,10 +525,12 @@ function renderRoomCard(room, startIndex) {
   return `
     <article class="room-card" data-room="${escapeHTML(room.id)}">
       <h3 class="room-card__title">${escapeHTML(room.name)}</h3>
-      <div class="room-card__plan">
-        <span class="room-card__plan-placeholder">Key plan — coming soon</span>
-        <img class="room-card__plan-img" data-plan="${escapeHTML(room.id)}" alt="Key plan for ${escapeHTML(room.name)}">
-      </div>
+      <a class="room-card__plan-link" href="#room/${escapeHTML(room.id)}" aria-label="Open ${escapeHTML(room.name)} page">
+        <div class="room-card__plan">
+          <span class="room-card__plan-placeholder">Key plan — coming soon</span>
+          <img class="room-card__plan-img" data-plan="${escapeHTML(room.id)}" alt="Key plan for ${escapeHTML(room.name)}">
+        </div>
+      </a>
       ${listHTML}
     </article>
   `;
@@ -467,7 +540,6 @@ function renderExhibition() {
   const mount = document.querySelector("[data-exhibition-mount]");
   if (!mount) return;
 
-  // Walk rooms in display order (M2 first, U3 last), accumulating count
   const displayOrder = [
     ...ROOMS.filter(r => r.floor === "m2"),
     ...ROOMS.filter(r => r.floor === "u3"),
@@ -498,6 +570,125 @@ function renderExhibition() {
 
 
 /* =========================================================
+   Render full Room page  (#room/<id>)
+   ---------------------------------------------------------
+   - Big title (room name)
+   - Big key plan image (assets/plans/<id>-page.png, falls back to <id>.png)
+   - Roster of students alphabetical by first name, with advisor.
+     Student name links to project page; advisor links to filtered list.
+     U3 students aren't linked (no project pages).
+   ========================================================= */
+
+function renderRoomPage(room) {
+  const linkStudents = room.floor !== "u3";
+
+  // Sort alphabetically by first name; preserve original room
+  // membership but display in order.
+  const students = [...room.students].sort(firstNameSort);
+
+  const rosterHTML = students.length ? students.map((name, i) => {
+    const advisor = ADVISOR_BY_STUDENT[name] || null;
+    const advisorHTML = advisor
+      ? `<a class="room-page__advisor" href="#projects/advisor/${slugify(advisor)}">${escapeHTML(advisor)}</a>`
+      : `<span class="room-page__advisor room-page__advisor--pending">Coming soon</span>`;
+
+    const studentHTML = linkStudents
+      ? `<a class="room-page__student" href="#project/${slugify(name)}">${escapeHTML(name)}</a>`
+      : `<span class="room-page__student">${escapeHTML(name)}</span>`;
+
+    return `
+      <div class="room-page__roster-row">
+        <span class="room-page__num">${i + 1}.</span>
+        ${studentHTML}
+        <div class="room-page__advisor-wrap">
+          <span class="room-page__advisor-label">Advisor</span>
+          ${advisorHTML}
+        </div>
+      </div>
+    `;
+  }).join("") : `<p class="room-card__pending">Names coming soon.</p>`;
+
+  roomMount.innerHTML = `
+    <div class="room-page">
+      <a class="room-page__back" href="#exhibition">Back to exhibition</a>
+      <h1 class="room-page__title">${escapeHTML(room.name)}</h1>
+      <div class="room-page__plan">
+        <span class="room-page__plan-placeholder">Key plan — coming soon</span>
+        <img class="room-page__plan-img" data-room-plan="${escapeHTML(room.id)}" alt="Plan of ${escapeHTML(room.name)}">
+      </div>
+      <div class="room-page__roster">${rosterHTML}</div>
+    </div>
+  `;
+
+  // Load the larger "<id>-page.png" image first; fall back to the
+  // smaller "<id>.png" used on the exhibition card if no -page version.
+  const planImg = roomMount.querySelector("[data-room-plan]");
+  if (planImg) {
+    const id = planImg.dataset.roomPlan;
+    let attempts = [
+      `${PATHS.plans.dir}/${id}-page`,
+      `${PATHS.plans.dir}/${id}`,
+    ];
+    let attemptIdx = 0;
+
+    function tryNextBase() {
+      if (attemptIdx >= attempts.length) { planImg.remove(); return; }
+      autoLoadImageWithFallback(planImg, attempts[attemptIdx], PATHS.plans.exts, () => {
+        attemptIdx++;
+        tryNextBase();
+      });
+    }
+    tryNextBase();
+  }
+}
+
+/* Variant of autoLoadImage that calls onAllFailed instead of removing
+   the element when every extension has been tried unsuccessfully. */
+function autoLoadImageWithFallback(img, basePath, exts, onAllFailed) {
+  let i = 0;
+  function loadNext() {
+    if (i >= exts.length) { onAllFailed(); return; }
+    img.src = `${basePath}.${exts[i]}`;
+    i++;
+  }
+  // Remove any pre-existing handlers from a previous attempt
+  img.onload = () => img.classList.add("is-loaded");
+  img.onerror = loadNext;
+  loadNext();
+}
+
+
+/* =========================================================
+   Advisor filter bar (above the projects grid)
+   ========================================================= */
+
+function renderAdvisorFilter() {
+  const mount = document.querySelector("[data-advisor-filter]");
+  if (!mount) return;
+
+  // Build sorted list of advisor slugs (by first name)
+  const advisorSlugs = Object.keys(STUDENTS_BY_ADVISOR).sort((a, b) => {
+    return firstNameSort(ADVISOR_NAME_BY_SLUG[a], ADVISOR_NAME_BY_SLUG[b]);
+  });
+
+  if (advisorSlugs.length === 0) {
+    mount.innerHTML = "";
+    return;
+  }
+
+  const allCls = `advisor-filter__chip${activeAdvisorSlug ? "" : " is-active"}`;
+  const chips = [`<a class="${allCls}" href="#projects">All</a>`];
+
+  for (const slug of advisorSlugs) {
+    const cls = `advisor-filter__chip${activeAdvisorSlug === slug ? " is-active" : ""}`;
+    chips.push(`<a class="${cls}" href="#projects/advisor/${slug}">${escapeHTML(ADVISOR_NAME_BY_SLUG[slug])}</a>`);
+  }
+
+  mount.innerHTML = chips.join("");
+}
+
+
+/* =========================================================
    Render Projects grid
    ========================================================= */
 
@@ -505,9 +696,21 @@ function renderProjectsGrid() {
   const grid = document.querySelector("[data-projects-grid]");
   if (!grid) return;
 
-  const sorted = [...STUDENTS].sort((a, b) =>
-    a.localeCompare(b, undefined, { sensitivity: "base" })
-  );
+  // Determine which students to show
+  let visibleStudents;
+  if (activeAdvisorSlug) {
+    visibleStudents = STUDENTS_BY_ADVISOR[activeAdvisorSlug] || [];
+  } else {
+    visibleStudents = STUDENTS;
+  }
+
+  const sorted = [...visibleStudents].sort(nameSort);
+
+  if (sorted.length === 0) {
+    grid.innerHTML = `<li class="projects-empty">No projects match this filter yet.</li>`;
+    _renderedWithEasterEgg = false;
+    return;
+  }
 
   const items = sorted.map(name => {
     const slug = slugify(name);
@@ -524,9 +727,8 @@ function renderProjectsGrid() {
     `;
   });
 
-  // Easter egg: append a temporary, non-clickable "M2" card at the end.
-  // The face image is expected at assets/faces/M2.png (case-sensitive).
-  if (projectsEasterEgg) {
+  // Easter egg only renders on the unfiltered ALL view
+  if (projectsEasterEgg && !activeAdvisorSlug) {
     items.push(`
       <li>
         <div class="project-card project-card--easter" aria-label="M2 — every face combined">
@@ -547,7 +749,6 @@ function renderProjectsGrid() {
     autoLoadImage(img, `${PATHS.faces.dir}/${slug}`, PATHS.faces.exts);
   });
 
-  // M2 face is a special-cased filename (capital "M2") so it's loaded directly.
   const easterImg = grid.querySelector("[data-face-easter]");
   if (easterImg) autoLoadImage(easterImg, `${PATHS.faces.dir}/M2`, PATHS.faces.exts);
 
@@ -556,23 +757,28 @@ function renderProjectsGrid() {
 
 
 /* =========================================================
-   Render Project detail (single student page)
+   Render Project detail
+   ---------------------------------------------------------
+   Room and advisor are now clickable links when known.
    ========================================================= */
-
-function fact(label, value, pending) {
-  const cls = pending
-    ? "project-detail__fact-value project-detail__fact-value--pending"
-    : "project-detail__fact-value";
-  return `
-    <div data-fact="${escapeHTML(label.toLowerCase())}">
-      <span class="project-detail__fact-label">${escapeHTML(label)}</span>
-      <span class="${cls}">${escapeHTML(value)}</span>
-    </div>
-  `;
-}
 
 function renderProjectDetailSkeleton(name) {
   const room = findRoomForStudent(name);
+
+  // Room field (link if found)
+  const roomFact = room
+    ? `
+      <div data-fact="room">
+        <span class="project-detail__fact-label">Room</span>
+        <a class="project-detail__fact-value" href="#room/${escapeHTML(room.id)}">${escapeHTML(room.name)}</a>
+      </div>
+    `
+    : `
+      <div data-fact="room">
+        <span class="project-detail__fact-label">Room</span>
+        <span class="project-detail__fact-value project-detail__fact-value--pending">TBA</span>
+      </div>
+    `;
 
   return `
     <div class="project-detail">
@@ -595,8 +801,11 @@ function renderProjectDetailSkeleton(name) {
         </div>
         <div class="project-detail__meta">
           <div class="project-detail__facts">
-            ${fact("Room",    room      || "TBA",         !room)}
-            ${fact("Advisor", "Coming soon",              true)}
+            ${roomFact}
+            <div data-fact="advisor">
+              <span class="project-detail__fact-label">Advisor</span>
+              <span class="project-detail__fact-value project-detail__fact-value--pending">Coming soon</span>
+            </div>
           </div>
           <div data-slot="text">
             <p class="project-detail__pending">Project description — coming soon (≈400 words).</p>
@@ -630,7 +839,7 @@ async function hydrateProjectDetail(slug, name) {
     if (advisorBlock) {
       advisorBlock.innerHTML = `
         <span class="project-detail__fact-label">Advisor</span>
-        <span class="project-detail__fact-value">${escapeHTML(data.advisor)}</span>
+        <a class="project-detail__fact-value" href="#projects/advisor/${slugify(data.advisor)}">${escapeHTML(data.advisor)}</a>
       `;
     }
   }
@@ -650,27 +859,30 @@ async function hydrateProjectDetail(slug, name) {
 
 
 /* =========================================================
-   Bootstrap — load rooms.txt FIRST, then render everything
+   Bootstrap
    ========================================================= */
 
 async function bootstrap() {
-  // Disable browser scroll restoration so we control it
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
-  // Kick off the master key plan load — it's not blocking, runs in parallel.
+  // Master key plan loads in parallel
   const masterPlanImg = document.querySelector("[data-master-plan]");
   if (masterPlanImg) {
     autoLoadImage(masterPlanImg, `${PATHS.plans.dir}/master-key-plan`, PATHS.plans.exts);
   }
 
-  // Load text files in parallel.
+  // Load text files in parallel:
+  //   rooms.txt, organizers.txt, AND every per-student .txt
+  //   (the last so we can build the advisor index before first render)
   const [, organizers] = await Promise.all([
     loadRoomsTxt(),
     loadOrganizersTxt(),
+    buildAdvisorIndex(),
   ]);
 
   renderExhibition();
   renderProjectsGrid();
+  renderAdvisorFilter();
   renderOrganizers(organizers);
   route();
 }
@@ -683,29 +895,29 @@ bootstrap();
    ========================================================= */
 
 const circle = document.querySelector(".circle-cursor");
-let target = { x: 0, y: 0 };
-let pos    = { x: 0, y: 0 };
-let seen   = false;
+let cursorTarget = { x: 0, y: 0 };
+let cursorPos    = { x: 0, y: 0 };
+let cursorSeen   = false;
 
 document.addEventListener("mousemove", e => {
-  target.x = e.clientX;
-  target.y = e.clientY;
+  cursorTarget.x = e.clientX;
+  cursorTarget.y = e.clientY;
 
-  if (!seen) {
-    pos.x = target.x;
-    pos.y = target.y;
+  if (!cursorSeen) {
+    cursorPos.x = cursorTarget.x;
+    cursorPos.y = cursorTarget.y;
     circle.classList.add("is-visible");
-    seen = true;
+    cursorSeen = true;
   }
 });
 
 document.addEventListener("mouseleave", () => circle.classList.remove("is-visible"));
-document.addEventListener("mouseenter", () => { if (seen) circle.classList.add("is-visible"); });
+document.addEventListener("mouseenter", () => { if (cursorSeen) circle.classList.add("is-visible"); });
 
 function tick() {
-  pos.x += (target.x - pos.x) * 0.18;
-  pos.y += (target.y - pos.y) * 0.18;
-  circle.style.transform = `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)`;
+  cursorPos.x += (cursorTarget.x - cursorPos.x) * 0.18;
+  cursorPos.y += (cursorTarget.y - cursorPos.y) * 0.18;
+  circle.style.transform = `translate(${cursorPos.x}px, ${cursorPos.y}px) translate(-50%, -50%)`;
   requestAnimationFrame(tick);
 }
 tick();
