@@ -7,20 +7,20 @@
 
 ROOM 101
 Bethany Wakelin
+Bronwyn Bell
 Jessica Villarasa
 Karine Payette
 Mallory Kerr
 Qiqi Liu
 Sarah Delnour
 Téa Canton
-Bronwyn Bell
 
 ROOM 102
 Bianca Hacker
 Gaël Haddad
 Nicolea Apostolidis
-Serena Valles
 Sean Wolanyk
+Serena Valles
 
 ROOM 114
 Albane Queinnec-Barreau
@@ -29,6 +29,7 @@ Alyssa Pangilinan
 Anastasia Cubasova
 Antoine Kirouac
 Eliza Mihali
+Félix Bergeron
 Ishaan Anand
 Jacob Haley
 Jérémy Turbide
@@ -38,7 +39,6 @@ Maria Jose Nolasco Ordonez
 Nicholas Santoianni
 Oscar Lallier
 Suehayla Eljaji
-Félix Bergeron
 
 ROOM 312
 Abby MacIntosh
