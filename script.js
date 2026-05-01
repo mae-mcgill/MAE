@@ -60,7 +60,7 @@ const ROOMS = [
 
 const PATHS = {
   faces:        { dir: "assets/faces",          exts: ["png", "jpg", "jpeg", "webp"] },
-  projectImage: { dir: "assets/project-images", exts: ["jpg", "jpeg", "png", "webp"] },
+  projectImage: { dir: "assets/project-images", exts: ["jpg", "jpeg", "png", "webp", "gif"] },
   plans:        { dir: "assets/plans",          exts: ["png", "jpg", "jpeg"] },
   text:         { dir: "assets/project-texts",  ext:  "txt" },
   rooms:        "assets/text-files/rooms.txt",
